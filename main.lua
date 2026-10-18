@@ -33,18 +33,30 @@ local CONFIG = {
 -- Global flags storage
 CentralUI.Flags = {}
 
--- Helper function to create fonts (avoiding conflict with Roblox Font class)
-local function NewFont(weight)
-    if weight == "Bold" then
-        return CONFIG.Fonts.Bold
-    elseif weight == "Medium" then
-        return CONFIG.Fonts.Medium
-    else
-        return CONFIG.Fonts.Regular
+-- Helper: Detect Executor
+local function GetExecutor()
+    local executor = "Unknown"
+    if identifyexecutor then
+        local success, result = pcall(identifyexecutor)
+        if success and type(result) == "string" then
+            executor = result
+        end
+    elseif syn then executor = "Synapse X"
+    elseif KRNL_LOADED then executor = "Krnl"
+    elseif fluxus then executor = "Fluxus"
+    elseif is_sirhurt_closure then executor = "SirHurt"
+    elseif secure_load then executor = "Sentinel"
+    elseif getgenv().ScriptWare then executor = "Script-Ware"
     end
+    return executor
 end
 
--- Utility functions
+local function NewFont(weight)
+    if weight == "Bold" then return CONFIG.Fonts.Bold
+    elseif weight == "Medium" then return CONFIG.Fonts.Medium
+    else return CONFIG.Fonts.Regular end
+end
+
 local function TweenProperty(instance, property, goal, duration, easingStyle, easingDirection)
     local tweenInfo = TweenInfo.new(duration or 0.25, easingStyle or Enum.EasingStyle.Back, easingDirection or Enum.EasingDirection.Out)
     game:GetService("TweenService"):Create(instance, tweenInfo, {[property] = goal}):Play()
@@ -61,10 +73,10 @@ local function CreateInstance(class, parent, properties)
     return instance
 end
 
--- ScreenGui setup
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local UserInputService = game:GetService("UserInputService")
 
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CentralUI"
@@ -86,89 +98,49 @@ local WelcomerFrame = CreateInstance("Frame", ScreenGui, {
 
 CreateInstance("UICorner", WelcomerFrame, {CornerRadius = UDim.new(0, 6)})
 CreateInstance("UIStroke", WelcomerFrame, {
-    Transparency = 0.5,
-    Color = CONFIG.Colors.Stroke,
-    ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    Transparency = 0.5, Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 })
 
 local WelcomerContent = CreateInstance("Frame", WelcomerFrame, {
-    Size = UDim2.new(0, 420, 0, 200),
-    Position = UDim2.new(0.5, -210, 0.5, -100),
-    Name = "Content",
-    BackgroundTransparency = 1
+    Size = UDim2.new(0, 420, 0, 200), Position = UDim2.new(0.5, -210, 0.5, -100), Name = "Content", BackgroundTransparency = 1
 })
 
 CreateInstance("ImageLabel", WelcomerContent, {
-    BorderSizePixel = 0,
-    BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-    Image = CONFIG.LogoID,
-    Size = UDim2.new(0, 107, 0, 74),
-    BackgroundTransparency = 1,
-    Name = "MAIN-SVG",
-    Position = UDim2.new(0.37046, 0, -0.06682, 0)
+    Image = CONFIG.LogoID, Size = UDim2.new(0, 107, 0, 74), BackgroundTransparency = 1, Name = "MAIN-SVG", Position = UDim2.new(0.37046, 0, -0.06682, 0)
 })
-
 CreateInstance("TextLabel", WelcomerContent, {
-    TextSize = 34,
-    FontFace = CONFIG.Fonts.Bold,
-    TextColor3 = CONFIG.Colors.Text,
-    BackgroundTransparency = 1,
-    Size = UDim2.new(1, 0, 0, 46),
-    Text = "Central UI",
-    Name = "Title",
-    Position = UDim2.new(0, 0, 0, 36)
+    TextSize = 34, FontFace = CONFIG.Fonts.Bold, TextColor3 = CONFIG.Colors.Text, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 46), Text = "Central UI", Name = "Title", Position = UDim2.new(0, 0, 0, 36)
 })
-
 CreateInstance("TextLabel", WelcomerContent, {
-    TextSize = 13,
-    FontFace = CONFIG.Fonts.Regular,
-    TextColor3 = CONFIG.Colors.Subtext,
-    BackgroundTransparency = 1,
-    Size = UDim2.new(1, 0, 0, 18),
-    Text = "Loading, please wait...",
-    Name = "Subtitle",
-    Position = UDim2.new(0, 0, 0, 82)
+    TextSize = 13, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Subtext, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 18), Text = "Loading, please wait...", Name = "Subtitle", Position = UDim2.new(0, 0, 0, 82)
 })
 
 local ProgressBar = CreateInstance("Frame", WelcomerContent, {
-    BorderSizePixel = 0,
-    BackgroundColor3 = CONFIG.Colors.Element,
-    Size = UDim2.new(0.7, 0, 0, 3),
-    Position = UDim2.new(0.15, 0, 0, 130),
-    Name = "ProgressBar"
+    BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Element, Size = UDim2.new(0.7, 0, 0, 3), Position = UDim2.new(0.15, 0, 0, 130), Name = "ProgressBar"
 })
 CreateInstance("UICorner", ProgressBar, {CornerRadius = UDim.new(0, 2)})
-
 local ProgressFill = CreateInstance("Frame", ProgressBar, {
-    BorderSizePixel = 0,
-    BackgroundColor3 = CONFIG.Colors.Accent,
-    Size = UDim2.new(0, 0, 1, 0),
-    Name = "Fill"
+    BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Accent, Size = UDim2.new(0, 0, 1, 0), Name = "Fill"
 })
 CreateInstance("UICorner", ProgressFill, {CornerRadius = UDim.new(0, 2)})
 
 local PercentText = CreateInstance("TextLabel", WelcomerContent, {
-    TextSize = 11,
-    FontFace = CONFIG.Fonts.Regular,
-    TextColor3 = CONFIG.Colors.Subtext,
-    BackgroundTransparency = 1,
-    Size = UDim2.new(1, 0, 0, 16),
-    Text = "0%",
-    Name = "Percent",
-    Position = UDim2.new(0, 0, 0, 145)
+    TextSize = 11, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Subtext, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 16), Text = "0%", Name = "Percent", Position = UDim2.new(0, 0, 0, 145)
+})
+CreateInstance("TextLabel", WelcomerFrame, {
+    TextSize = 11, TextXAlignment = Enum.TextXAlignment.Right, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Subtext, BackgroundTransparency = 1, Size = UDim2.new(0, 80, 0, 18), Text = CONFIG.Version, Name = "Version", Position = UDim2.new(1, -90, 1, -28)
 })
 
-CreateInstance("TextLabel", WelcomerFrame, {
-    TextSize = 11,
-    TextXAlignment = Enum.TextXAlignment.Right,
-    FontFace = CONFIG.Fonts.Regular,
-    TextColor3 = CONFIG.Colors.Subtext,
-    BackgroundTransparency = 1,
-    Size = UDim2.new(0, 80, 0, 18),
-    Text = CONFIG.Version,
-    Name = "Version",
-    Position = UDim2.new(1, -90, 1, -28)
+-- Main Window
+local MainWindow = CreateInstance("Frame", ScreenGui, {
+    Visible = false, BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Background, ClipsDescendants = true, Size = UDim2.new(0, 540, 0, 380), Position = UDim2.new(0.5, -270, 0.5, -190), Name = "MainWindow"
 })
+CreateInstance("UICorner", MainWindow, {CornerRadius = UDim.new(0, 6)})
+CreateInstance("UIStroke", MainWindow, {Transparency = 0.5, Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
+
+local WindowScale = Instance.new("UIScale")
+WindowScale.Scale = 0.9
+WindowScale.Parent = MainWindow
 
 -- Simulate loading
 task.spawn(function()
@@ -178,306 +150,137 @@ task.spawn(function()
         PercentText.Text = i .. "%"
     end
     
-    -- Fade out welcomer
     TweenProperty(WelcomerFrame, "BackgroundTransparency", 1, 0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    for _, child in pairs(WelcomerFrame:GetChildren()) do
-        if child:IsA("GuiObject") then
-            TweenProperty(child, "BackgroundTransparency", 1, 0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-            if child:IsA("TextLabel") or child:IsA("TextButton") then
-                TweenProperty(child, "TextTransparency", 1, 0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-            end
-            if child:IsA("ImageLabel") then
-                TweenProperty(child, "ImageTransparency", 1, 0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-            end
-            if child:IsA("UIStroke") then
-                TweenProperty(child, "Transparency", 1, 0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-            end
-        end
+    for _, child in pairs(WelcomerFrame:GetDescendants()) do
+        if child:IsA("TextLabel") then TweenProperty(child, "TextTransparency", 1, 0.5)
+        elseif child:IsA("ImageLabel") then TweenProperty(child, "ImageTransparency", 1, 0.5)
+        elseif child:IsA("Frame") then TweenProperty(child, "BackgroundTransparency", 1, 0.5)
+        elseif child:IsA("UIStroke") then TweenProperty(child, "Transparency", 1, 0.5) end
     end
     
     task.wait(0.5)
     WelcomerFrame.Visible = false
-    
-    -- Show main window with animation
     MainWindow.Visible = true
     TweenProperty(WindowScale, "Scale", 1, 0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 end)
 
--- Main Window
-local MainWindow = CreateInstance("Frame", ScreenGui, {
-    Visible = false,
-    BorderSizePixel = 0,
-    BackgroundColor3 = CONFIG.Colors.Background,
-    ClipsDescendants = true,
-    Size = UDim2.new(0, 540, 0, 380),
-    Position = UDim2.new(0.5, -270, 0.5, -190),
-    Name = "MainWindow"
-})
-
-CreateInstance("UICorner", MainWindow, {CornerRadius = UDim.new(0, 6)})
-CreateInstance("UIStroke", MainWindow, {
-    Transparency = 0.5,
-    Color = CONFIG.Colors.Stroke,
-    ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-})
-
--- Add UIScale for animation
-local WindowScale = Instance.new("UIScale")
-WindowScale.Scale = 0.9
-WindowScale.Parent = MainWindow
-
 -- Topbar
 local Topbar = CreateInstance("Frame", MainWindow, {
-    BorderSizePixel = 0,
-    BackgroundColor3 = CONFIG.Colors.Topbar,
-    Size = UDim2.new(1, 0, 0, 46),
-    Name = "Topbar"
+    BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Topbar, Size = UDim2.new(1, 0, 0, 46), Name = "Topbar"
 })
 CreateInstance("UICorner", Topbar, {CornerRadius = UDim.new(0, 6)})
+CreateInstance("Frame", Topbar, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Stroke, Size = UDim2.new(1, 0, 0, 1), Position = UDim2.new(0, 0, 1, -1)})
 
-CreateInstance("Frame", Topbar, {
-    BorderSizePixel = 0,
-    BackgroundColor3 = CONFIG.Colors.Stroke,
-    Size = UDim2.new(1, 0, 0, 1),
-    Position = UDim2.new(0, 0, 1, -1)
-})
-
-CreateInstance("TextLabel", Topbar, {
-    TextSize = 16,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    FontFace = CONFIG.Fonts.Medium,
-    TextColor3 = CONFIG.Colors.Text,
-    BackgroundTransparency = 1,
-    Size = UDim2.new(0.91481, -120, 1, 0),
-    Text = "Central UI",
-    Position = UDim2.new(0, 62, 0, 0)
+-- Title Label
+local TitleLabel = CreateInstance("TextLabel", Topbar, {
+    TextSize = 16, TextXAlignment = Enum.TextXAlignment.Left, FontFace = CONFIG.Fonts.Medium, TextColor3 = CONFIG.Colors.Text, BackgroundTransparency = 1, Size = UDim2.new(0.91481, -120, 1, 0), Text = "Central UI", Position = UDim2.new(0, 62, 0, 0)
 })
 
 CreateInstance("ImageLabel", Topbar, {
-    BorderSizePixel = 0,
-    BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-    Image = CONFIG.LogoID,
-    Size = UDim2.new(0, 62, 0, 55),
-    BackgroundTransparency = 1,
-    Name = "MAIN-SVG",
-    Position = UDim2.new(0, 0, -0.1087, 0)
+    Image = CONFIG.LogoID, Size = UDim2.new(0, 62, 0, 55), BackgroundTransparency = 1, Name = "MAIN-SVG", Position = UDim2.new(0, 0, -0.1087, 0)
 })
 
--- Minimize Button
+-- Min / Close
 local MinBtn = CreateInstance("TextButton", Topbar, {
-    BorderSizePixel = 0,
-    TextSize = 14,
-    AutoButtonColor = false,
-    TextColor3 = CONFIG.Colors.Subtext,
-    BackgroundColor3 = CONFIG.Colors.Element,
-    FontFace = CONFIG.Fonts.Bold,
-    Size = UDim2.new(0, 28, 0, 28),
-    Text = "—",
-    Name = "MinBtn",
-    Position = UDim2.new(1, -76, 0.5, -14)
+    BorderSizePixel = 0, TextSize = 14, AutoButtonColor = false, TextColor3 = CONFIG.Colors.Subtext, BackgroundColor3 = CONFIG.Colors.Element, FontFace = CONFIG.Fonts.Bold, Size = UDim2.new(0, 28, 0, 28), Text = "—", Name = "MinBtn", Position = UDim2.new(1, -76, 0.5, -14)
 })
 CreateInstance("UICorner", MinBtn, {CornerRadius = UDim.new(0, 4)})
-CreateInstance("UIStroke", MinBtn, {
-    Color = CONFIG.Colors.Stroke,
-    ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-})
+CreateInstance("UIStroke", MinBtn, {Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
 
--- Close Button
 local CloseBtn = CreateInstance("TextButton", Topbar, {
-    BorderSizePixel = 0,
-    TextSize = 12,
-    AutoButtonColor = false,
-    TextColor3 = CONFIG.Colors.Subtext,
-    BackgroundColor3 = CONFIG.Colors.Element,
-    FontFace = CONFIG.Fonts.Bold,
-    Size = UDim2.new(0, 28, 0, 28),
-    Text = "✕",
-    Name = "CloseBtn",
-    Position = UDim2.new(1, -42, 0.5, -14)
+    BorderSizePixel = 0, TextSize = 12, AutoButtonColor = false, TextColor3 = CONFIG.Colors.Subtext, BackgroundColor3 = CONFIG.Colors.Element, FontFace = CONFIG.Fonts.Bold, Size = UDim2.new(0, 28, 0, 28), Text = "✕", Name = "CloseBtn", Position = UDim2.new(1, -42, 0.5, -14)
 })
 CreateInstance("UICorner", CloseBtn, {CornerRadius = UDim.new(0, 4)})
-CreateInstance("UIStroke", CloseBtn, {
-    Color = CONFIG.Colors.Stroke,
-    ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-})
+CreateInstance("UIStroke", CloseBtn, {Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
 
--- Dragging functionality
-local UserInputService = game:GetService("UserInputService")
-local dragging = false
-local dragStart = nil
-local startPos = nil
-
-local function update(input)
-    local delta = input.Position - dragStart
-    MainWindow.Position = UDim2.new(
-        startPos.X.Scale,
-        startPos.X.Offset + delta.X,
-        startPos.Y.Scale,
-        startPos.Y.Offset + delta.Y
-    )
-end
-
+-- Dragging
+local dragging, dragStart, startPos = false, nil, nil
 Topbar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = MainWindow.Position
-        
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
+        dragging = true; dragStart = input.Position; startPos = MainWindow.Position
+        input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
     end
 end)
-
 Topbar.InputChanged:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
         if dragging then
-            update(input)
+            local delta = input.Position - dragStart
+            MainWindow.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end
 end)
 
--- Toggle visibility with Ctrl
+-- Toggle UI / Close
 local isOpen = true
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
     if input.KeyCode == Enum.KeyCode.RightControl or input.KeyCode == Enum.KeyCode.LeftControl then
         isOpen = not isOpen
         MainWindow.Visible = isOpen
-        if isOpen then
-            TweenProperty(WindowScale, "Scale", 1, 0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-        end
+        if isOpen then TweenProperty(WindowScale, "Scale", 1, 0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out) end
     end
 end)
 
--- Minimize/Close buttons
 MinBtn.MouseButton1Click:Connect(function()
     isOpen = false
     TweenProperty(WindowScale, "Scale", 0.9, 0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
-    task.wait(0.3)
-    MainWindow.Visible = false
+    task.wait(0.3); MainWindow.Visible = false
 end)
-
-CloseBtn.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
-end)
+CloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
 
 -- Tab Holder
 local TabHolder = CreateInstance("Frame", MainWindow, {
-    BorderSizePixel = 0,
-    BackgroundColor3 = CONFIG.Colors.Background,
-    Size = UDim2.new(0, 140, 1, -46),
-    Position = UDim2.new(0, 0, 0, 46),
-    Name = "TabHolder"
+    BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Background, Size = UDim2.new(0, 140, 1, -46), Position = UDim2.new(0, 0, 0, 46), Name = "TabHolder"
 })
-
 local TabScroll = CreateInstance("ScrollingFrame", TabHolder, {
-    BorderSizePixel = 0,
-    Name = "TabScroll",
-    AutomaticCanvasSize = Enum.AutomaticSize.Y,
-    Size = UDim2.new(1, 0, 1, 0),
-    ScrollBarImageColor3 = CONFIG.Colors.Subtext,
-    ScrollBarThickness = 2,
-    BackgroundTransparency = 1
+    BorderSizePixel = 0, Name = "TabScroll", AutomaticCanvasSize = Enum.AutomaticSize.Y, Size = UDim2.new(1, 0, 1, 0), ScrollBarImageColor3 = CONFIG.Colors.Subtext, ScrollBarThickness = 2, BackgroundTransparency = 1
 })
+CreateInstance("UIPadding", TabScroll, {PaddingTop = UDim.new(0, 8), PaddingRight = UDim.new(0, 8), PaddingLeft = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8)})
+CreateInstance("UIListLayout", TabScroll, {Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder})
 
-CreateInstance("UIPadding", TabScroll, {
-    PaddingTop = UDim.new(0, 8),
-    PaddingRight = UDim.new(0, 8),
-    PaddingLeft = UDim.new(0, 8),
-    PaddingBottom = UDim.new(0, 8)
-})
-
-local TabListLayout = CreateInstance("UIListLayout", TabScroll, {
-    Padding = UDim.new(0, 4),
-    SortOrder = Enum.SortOrder.LayoutOrder
-})
-
--- Content Holder
 local ContentHolder = CreateInstance("Frame", MainWindow, {
-    ClipsDescendants = true,
-    Size = UDim2.new(1, -140, 1, -46),
-    Position = UDim2.new(0, 140, 0, 46),
-    Name = "ContentHolder",
-    BackgroundTransparency = 1
+    ClipsDescendants = true, Size = UDim2.new(1, -140, 1, -46), Position = UDim2.new(0, 140, 0, 46), Name = "ContentHolder", BackgroundTransparency = 1
 })
 
--- Tab system
 local Tabs = {}
 local CurrentTab = nil
+
+-- ==========================================
+-- PUBLIC METHODS (API)
+-- ==========================================
+
+function CentralUI:SetTitle(newTitle)
+    TitleLabel.Text = newTitle
+end
 
 function CentralUI:CreateTab(name, imageId)
     local tabData = {}
     
-    -- Create tab button
     local tabBtn = CreateInstance("TextButton", TabScroll, {
-        BorderSizePixel = 0,
-        TextSize = 13,
-        AutoButtonColor = false,
-        TextColor3 = CONFIG.Colors.Subtext,
-        BackgroundColor3 = CONFIG.Colors.Background,
-        FontFace = CONFIG.Fonts.Medium,
-        Size = UDim2.new(1, 0, 0, 32),
-        LayoutOrder = #Tabs + 1,
-        Text = name,
-        Name = "Tab_" .. name:gsub("%s+", "_")
+        BorderSizePixel = 0, TextSize = 13, AutoButtonColor = false, TextColor3 = CONFIG.Colors.Subtext, BackgroundColor3 = CONFIG.Colors.Background, FontFace = CONFIG.Fonts.Medium, Size = UDim2.new(1, 0, 0, 32), LayoutOrder = #Tabs + 1, Text = name, Name = "Tab_" .. name:gsub("%s+", "_")
     })
     CreateInstance("UICorner", tabBtn, {CornerRadius = UDim.new(0, 6)})
-    CreateInstance("UIStroke", tabBtn, {
-        Color = CONFIG.Colors.Stroke,
-        ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    })
+    CreateInstance("UIStroke", tabBtn, {Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
     
+    local iconLabel = nil
     if imageId then
-        CreateInstance("ImageLabel", tabBtn, {
-            BorderSizePixel = 0,
-            BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-            Image = imageId,
-            Size = UDim2.new(0, 20, 0, 19),
-            BackgroundTransparency = 1,
-            Name = "USER-IMAGE",
-            Position = UDim2.new(0.10484, 0, 0.1875, 0)
+        iconLabel = CreateInstance("ImageLabel", tabBtn, {
+            Image = imageId, Size = UDim2.new(0, 20, 0, 19), BackgroundTransparency = 1, Name = "USER-IMAGE", Position = UDim2.new(0.10484, 0, 0.1875, 0)
         })
     end
     
-    -- Create content frame
     local contentFrame = CreateInstance("ScrollingFrame", ContentHolder, {
-        Visible = false,
-        BorderSizePixel = 0,
-        CanvasSize = UDim2.new(0, 0, 0, 0),
-        Name = "Content_" .. name:gsub("%s+", "_"),
-        AutomaticCanvasSize = Enum.AutomaticSize.Y,
-        Size = UDim2.new(1, 0, 1, 0),
-        ScrollBarImageColor3 = CONFIG.Colors.Stroke,
-        ScrollBarThickness = 3,
-        LayoutOrder = #Tabs + 1,
-        BackgroundTransparency = 1
+        Visible = false, BorderSizePixel = 0, CanvasSize = UDim2.new(0, 0, 0, 0), Name = "Content_" .. name:gsub("%s+", "_"), AutomaticCanvasSize = Enum.AutomaticSize.Y, Size = UDim2.new(1, 0, 1, 0), ScrollBarImageColor3 = CONFIG.Colors.Stroke, ScrollBarThickness = 3, LayoutOrder = #Tabs + 1, BackgroundTransparency = 1
     })
+    CreateInstance("UIPadding", contentFrame, {PaddingTop = UDim.new(0, 8), PaddingRight = UDim.new(0, 8), PaddingLeft = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8)})
+    CreateInstance("UIListLayout", contentFrame, {Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder})
     
-    CreateInstance("UIPadding", contentFrame, {
-        PaddingTop = UDim.new(0, 8),
-        PaddingRight = UDim.new(0, 8),
-        PaddingLeft = UDim.new(0, 8),
-        PaddingBottom = UDim.new(0, 8)
-    })
-    
-    CreateInstance("UIListLayout", contentFrame, {
-        Padding = UDim.new(0, 6),
-        SortOrder = Enum.SortOrder.LayoutOrder
-    })
-    
-    -- Tab click handler
     tabBtn.MouseButton1Click:Connect(function()
-        -- Deactivate all tabs
         for _, tab in pairs(Tabs) do
             tab.Button.TextColor3 = CONFIG.Colors.Subtext
             tab.Button.BackgroundColor3 = CONFIG.Colors.Background
             tab.Content.Visible = false
         end
-        
-        -- Activate this tab
         tabBtn.TextColor3 = CONFIG.Colors.Text
         tabBtn.BackgroundColor3 = CONFIG.Colors.Element
         contentFrame.Visible = true
@@ -486,9 +289,26 @@ function CentralUI:CreateTab(name, imageId)
     
     tabData.Button = tabBtn
     tabData.Content = contentFrame
+    tabData.Name = name
+    
+    -- Add API for Tab Management
+    function tabData:SetIcon(newImageId)
+        if iconLabel then
+            iconLabel.Image = newImageId
+        else
+            iconLabel = CreateInstance("ImageLabel", tabBtn, {
+                Image = newImageId, Size = UDim2.new(0, 20, 0, 19), BackgroundTransparency = 1, Name = "USER-IMAGE", Position = UDim2.new(0.10484, 0, 0.1875, 0)
+            })
+        end
+    end
+    
+    function tabData:SetName(newName)
+        tabBtn.Text = newName
+        tabData.Name = newName
+    end
+    
     table.insert(Tabs, tabData)
     
-    -- Auto-select first tab
     if #Tabs == 1 then
         tabBtn.TextColor3 = CONFIG.Colors.Text
         tabBtn.BackgroundColor3 = CONFIG.Colors.Element
@@ -499,71 +319,64 @@ function CentralUI:CreateTab(name, imageId)
     return tabData
 end
 
--- Element creation functions
+function CentralUI:RemoveTab(tabData)
+    if not tabData then return end
+    if tabData.Button then tabData.Button:Destroy() end
+    if tabData.Content then tabData.Content:Destroy() end
+    
+    for i, t in ipairs(Tabs) do
+        if t == tabData then
+            table.remove(Tabs, i)
+            break
+        end
+    end
+    
+    if CurrentTab == tabData then
+        if #Tabs > 0 then
+            Tabs[1].Button:FireEvent("MouseButton1Click") -- Roblox doesn't have FireEvent, will simulate below
+            -- Simulate click
+            for _, tab in pairs(Tabs) do
+                tab.Button.TextColor3 = CONFIG.Colors.Subtext
+                tab.Button.BackgroundColor3 = CONFIG.Colors.Background
+                tab.Content.Visible = false
+            end
+            Tabs[1].Button.TextColor3 = CONFIG.Colors.Text
+            Tabs[1].Button.BackgroundColor3 = CONFIG.Colors.Element
+            Tabs[1].Content.Visible = true
+            CurrentTab = Tabs[1]
+        else
+            CurrentTab = nil
+        end
+    end
+end
+
+-- ==========================================
+-- ELEMENTS
+-- ==========================================
+
 function CentralUI:CreateSection(tab, title)
-    local section = CreateInstance("Frame", tab.Content, {
-        Size = UDim2.new(1, 0, 0, 24),
-        Name = "Section",
-        BackgroundTransparency = 1
-    })
-    
+    local section = CreateInstance("Frame", tab.Content, {Size = UDim2.new(1, 0, 0, 24), Name = "Section", BackgroundTransparency = 1})
     CreateInstance("TextLabel", section, {
-        TextSize = 11,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        FontFace = CONFIG.Fonts.Medium,
-        TextColor3 = CONFIG.Colors.Subtext,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 0, 20),
-        Text = title:upper()
+        TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left, FontFace = CONFIG.Fonts.Medium, TextColor3 = CONFIG.Colors.Subtext, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 20), Text = title:upper()
     })
-    
-    CreateInstance("Frame", section, {
-        BorderSizePixel = 0,
-        BackgroundColor3 = CONFIG.Colors.Line,
-        Size = UDim2.new(1, 0, 0, 1),
-        Position = UDim2.new(0, 0, 0, 20)
-    })
-    
+    CreateInstance("Frame", section, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Line, Size = UDim2.new(1, 0, 0, 1), Position = UDim2.new(0, 0, 0, 20)})
     return section
 end
 
 function CentralUI:CreateButton(tab, text, callback)
     local element = CreateInstance("Frame", tab.Content, {
-        BorderSizePixel = 0,
-        BackgroundColor3 = CONFIG.Colors.Element,
-        Size = UDim2.new(1, 0, 0, 34),
-        Name = "Element"
+        BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Element, Size = UDim2.new(1, 0, 0, 34), Name = "Element"
     })
     CreateInstance("UICorner", element, {CornerRadius = UDim.new(0, 6)})
-    CreateInstance("UIStroke", element, {
-        Transparency = 0.6,
-        Color = CONFIG.Colors.Stroke,
-        ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    })
+    CreateInstance("UIStroke", element, {Transparency = 0.6, Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
     
     local btn = CreateInstance("TextButton", element, {
-        TextSize = 13,
-        AutoButtonColor = false,
-        TextColor3 = CONFIG.Colors.Text,
-        FontFace = CONFIG.Fonts.Regular,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 1, 0),
-        Text = text
+        TextSize = 13, AutoButtonColor = false, TextColor3 = CONFIG.Colors.Text, FontFace = CONFIG.Fonts.Regular, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Text = text
     })
     
-    -- Hover effect
-    btn.MouseEnter:Connect(function()
-        TweenProperty(element, "BackgroundColor3", Color3.fromRGB(36, 36, 39), 0.15)
-    end)
-    
-    btn.MouseLeave:Connect(function()
-        TweenProperty(element, "BackgroundColor3", CONFIG.Colors.Element, 0.15)
-    end)
-    
-    btn.MouseButton1Click:Connect(function()
-        if callback then callback() end
-    end)
-    
+    btn.MouseEnter:Connect(function() TweenProperty(element, "BackgroundColor3", Color3.fromRGB(36, 36, 39), 0.15) end)
+    btn.MouseLeave:Connect(function() TweenProperty(element, "BackgroundColor3", CONFIG.Colors.Element, 0.15) end)
+    btn.MouseButton1Click:Connect(function() if callback then callback() end end)
     return btn
 end
 
@@ -572,88 +385,45 @@ function CentralUI:CreateToggle(tab, text, default, callback, flag)
     if flag then CentralUI.Flags[flag] = enabled end
     
     local element = CreateInstance("Frame", tab.Content, {
-        BorderSizePixel = 0,
-        BackgroundColor3 = CONFIG.Colors.Element,
-        Size = UDim2.new(1, 0, 0, 34),
-        Name = "Element"
+        BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Element, Size = UDim2.new(1, 0, 0, 34), Name = "Element"
     })
     CreateInstance("UICorner", element, {CornerRadius = UDim.new(0, 6)})
-    CreateInstance("UIStroke", element, {
-        Transparency = 0.6,
-        Color = CONFIG.Colors.Stroke,
-        ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    })
+    CreateInstance("UIStroke", element, {Transparency = 0.6, Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
     
     CreateInstance("TextLabel", element, {
-        TextSize = 13,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        FontFace = CONFIG.Fonts.Regular,
-        TextColor3 = CONFIG.Colors.Text,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, -60, 1, 0),
-        Text = text,
-        Position = UDim2.new(0, 12, 0, 0)
+        TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Text, BackgroundTransparency = 1, Size = UDim2.new(1, -60, 1, 0), Text = text, Position = UDim2.new(0, 12, 0, 0)
     })
     
     local toggleBg = CreateInstance("Frame", element, {
-        BorderSizePixel = 0,
-        BackgroundColor3 = enabled and CONFIG.Colors.Accent or CONFIG.Colors.Line,
-        Size = UDim2.new(0, 36, 0, 18),
-        Position = UDim2.new(1, -48, 0.5, -9)
+        BorderSizePixel = 0, BackgroundColor3 = enabled and CONFIG.Colors.Accent or CONFIG.Colors.Line, Size = UDim2.new(0, 36, 0, 18), Position = UDim2.new(1, -48, 0.5, -9)
     })
     CreateInstance("UICorner", toggleBg, {CornerRadius = UDim.new(0, 9)})
-    
-    if not enabled then
-        CreateInstance("UIStroke", toggleBg, {
-            Color = CONFIG.Colors.Stroke,
-            ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-        })
-    end
+    if not enabled then CreateInstance("UIStroke", toggleBg, {Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border}) end
     
     local toggleKnob = CreateInstance("Frame", toggleBg, {
-        BorderSizePixel = 0,
-        BackgroundColor3 = enabled and CONFIG.Colors.Background or CONFIG.Colors.Subtext,
-        Size = UDim2.new(0, 14, 0, 14),
-        Position = enabled and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
+        BorderSizePixel = 0, BackgroundColor3 = enabled and CONFIG.Colors.Background or CONFIG.Colors.Subtext, Size = UDim2.new(0, 14, 0, 14), Position = enabled and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
     })
     CreateInstance("UICorner", toggleKnob, {CornerRadius = UDim.new(0, 7)})
     
     local function updateToggle()
         enabled = not enabled
         if flag then CentralUI.Flags[flag] = enabled end
-        
         if enabled then
             TweenProperty(toggleBg, "BackgroundColor3", CONFIG.Colors.Accent, 0.2)
             TweenProperty(toggleKnob, "Position", UDim2.new(1, -16, 0.5, -7), 0.2)
             TweenProperty(toggleKnob, "BackgroundColor3", CONFIG.Colors.Background, 0.2)
-            -- Remove stroke if exists
-            for _, child in pairs(toggleBg:GetChildren()) do
-                if child:IsA("UIStroke") then child:Destroy() end
-            end
+            for _, child in pairs(toggleBg:GetChildren()) do if child:IsA("UIStroke") then child:Destroy() end end
         else
             TweenProperty(toggleBg, "BackgroundColor3", CONFIG.Colors.Line, 0.2)
             TweenProperty(toggleKnob, "Position", UDim2.new(0, 2, 0.5, -7), 0.2)
             TweenProperty(toggleKnob, "BackgroundColor3", CONFIG.Colors.Subtext, 0.2)
-            if not toggleBg:FindFirstChild("UIStroke") then
-                CreateInstance("UIStroke", toggleBg, {
-                    Color = CONFIG.Colors.Stroke,
-                    ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-                })
-            end
+            if not toggleBg:FindFirstChild("UIStroke") then CreateInstance("UIStroke", toggleBg, {Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border}) end
         end
-        
         if callback then callback(enabled) end
     end
     
-    element.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            updateToggle()
-        end
-    end)
-    
-    return {GetValue = function() return enabled end, SetValue = function(val) 
-        if enabled ~= val then updateToggle() end
-    end}
+    element.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then updateToggle() end end)
+    return {GetValue = function() return enabled end, SetValue = function(val) if enabled ~= val then updateToggle() end end}
 end
 
 function CentralUI:CreateSlider(tab, text, min, max, default, callback, flag)
@@ -661,113 +431,44 @@ function CentralUI:CreateSlider(tab, text, min, max, default, callback, flag)
     if flag then CentralUI.Flags[flag] = value end
     
     local element = CreateInstance("Frame", tab.Content, {
-        BorderSizePixel = 0,
-        BackgroundColor3 = CONFIG.Colors.Element,
-        Size = UDim2.new(1, 0, 0, 56),
-        Name = "Element"
+        BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Element, Size = UDim2.new(1, 0, 0, 56), Name = "Element"
     })
     CreateInstance("UICorner", element, {CornerRadius = UDim.new(0, 6)})
-    CreateInstance("UIStroke", element, {
-        Transparency = 0.6,
-        Color = CONFIG.Colors.Stroke,
-        ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    })
+    CreateInstance("UIStroke", element, {Transparency = 0.6, Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
     
     CreateInstance("TextLabel", element, {
-        TextSize = 13,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        FontFace = CONFIG.Fonts.Regular,
-        TextColor3 = CONFIG.Colors.Text,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, -70, 0, 20),
-        Text = text,
-        Position = UDim2.new(0, 12, 0, 6)
+        TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Text, BackgroundTransparency = 1, Size = UDim2.new(1, -70, 0, 20), Text = text, Position = UDim2.new(0, 12, 0, 6)
     })
-    
     local valueText = CreateInstance("TextLabel", element, {
-        TextSize = 13,
-        TextXAlignment = Enum.TextXAlignment.Right,
-        FontFace = CONFIG.Fonts.Medium,
-        TextColor3 = CONFIG.Colors.Accent,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(0, 60, 0, 20),
-        Text = tostring(value),
-        Position = UDim2.new(1, -72, 0, 6)
+        TextSize = 13, TextXAlignment = Enum.TextXAlignment.Right, FontFace = CONFIG.Fonts.Medium, TextColor3 = CONFIG.Colors.Accent, BackgroundTransparency = 1, Size = UDim2.new(0, 60, 0, 20), Text = tostring(value), Position = UDim2.new(1, -72, 0, 6)
     })
     
     local sliderBg = CreateInstance("Frame", element, {
-        BorderSizePixel = 0,
-        BackgroundColor3 = CONFIG.Colors.Line,
-        Size = UDim2.new(1, -24, 0, 4),
-        Position = UDim2.new(0, 12, 1, -14)
+        BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Line, Size = UDim2.new(1, -24, 0, 4), Position = UDim2.new(0, 12, 1, -14)
     })
     CreateInstance("UICorner", sliderBg, {CornerRadius = UDim.new(0, 2)})
     
-    local sliderFill = CreateInstance("Frame", sliderBg, {
-        BorderSizePixel = 0,
-        BackgroundColor3 = CONFIG.Colors.Accent,
-        Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
-    })
+    local sliderFill = CreateInstance("Frame", sliderBg, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Accent, Size = UDim2.new((value - min) / (max - min), 0, 1, 0)})
     CreateInstance("UICorner", sliderFill, {CornerRadius = UDim.new(0, 2)})
     
-    local sliderKnob = CreateInstance("Frame", sliderBg, {
-        BorderSizePixel = 0,
-        BackgroundColor3 = CONFIG.Colors.Background,
-        Size = UDim2.new(0, 12, 0, 12),
-        Position = UDim2.new((value - min) / (max - min), -6, 0.5, -6)
-    })
+    local sliderKnob = CreateInstance("Frame", sliderBg, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Background, Size = UDim2.new(0, 12, 0, 12), Position = UDim2.new((value - min) / (max - min), -6, 0.5, -6)})
     CreateInstance("UICorner", sliderKnob, {CornerRadius = UDim.new(0, 6)})
-    CreateInstance("UIStroke", sliderKnob, {
-        Thickness = 2,
-        Color = CONFIG.Colors.Accent,
-        ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    })
+    CreateInstance("UIStroke", sliderKnob, {Thickness = 2, Color = CONFIG.Colors.Accent, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
     
     local dragging = false
-    
     local function updateSlider(input)
         local percent = math.clamp((input.Position.X - sliderBg.AbsolutePosition.X) / sliderBg.AbsoluteSize.X, 0, 1)
         value = math.floor(min + (max - min) * percent + 0.5)
         if flag then CentralUI.Flags[flag] = value end
-        
         sliderFill.Size = UDim2.new(percent, 0, 1, 0)
         sliderKnob.Position = UDim2.new(percent, -6, 0.5, -6)
         valueText.Text = tostring(value)
-        
         if callback then callback(value) end
     end
     
-    sliderKnob.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-        end
-    end)
-    
-    sliderKnob.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-        end
-    end)
-    
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            updateSlider(input)
-        end
-    end)
-    
-    -- Click on slider bg
-    sliderBg.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            updateSlider(input)
-            dragging = true
-        end
-    end)
-    
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-        end
-    end)
+    sliderBg.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then updateSlider(input); dragging = true end end)
+    UserInputService.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then updateSlider(input) end end)
+    UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
     
     return {GetValue = function() return value end, SetValue = function(val)
         value = math.clamp(val, min, max)
@@ -781,126 +482,77 @@ function CentralUI:CreateSlider(tab, text, min, max, default, callback, flag)
 end
 
 function CentralUI:CreateDropdown(tab, text, options, default, callback, flag)
-    local selected = default or options[1]
+    local selected = default or options[1] or "None"
     if flag then CentralUI.Flags[flag] = selected end
     local expanded = false
     
     local element = CreateInstance("Frame", tab.Content, {
-        BorderSizePixel = 0,
-        BackgroundColor3 = CONFIG.Colors.Element,
-        Size = UDim2.new(1, 0, 0, 34),
-        Name = "Element",
-        ClipsDescendants = true
+        BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Element, Size = UDim2.new(1, 0, 0, 34), Name = "Element", ClipsDescendants = true
     })
     CreateInstance("UICorner", element, {CornerRadius = UDim.new(0, 6)})
-    CreateInstance("UIStroke", element, {
-        Transparency = 0.6,
-        Color = CONFIG.Colors.Stroke,
-        ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    CreateInstance("UIStroke", element, {Transparency = 0.6, Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
+    
+    -- Кнопка-шапка (чтобы клик по тексту не ломал UI)
+    local headerBtn = CreateInstance("TextButton", element, {
+        BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 34), Text = "", ZIndex = 2
     })
     
-    CreateInstance("TextLabel", element, {
-        TextSize = 13,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        FontFace = CONFIG.Fonts.Regular,
-        TextColor3 = CONFIG.Colors.Text,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, -100, 1, 0),
-        Text = text,
-        Position = UDim2.new(0, 12, 0, 0)
+    CreateInstance("TextLabel", headerBtn, {
+        TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Text, BackgroundTransparency = 1, Size = UDim2.new(1, -100, 1, 0), Text = text, Position = UDim2.new(0, 12, 0, 0)
     })
     
-    local selectedText = CreateInstance("TextLabel", element, {
-        TextSize = 13,
-        TextXAlignment = Enum.TextXAlignment.Right,
-        FontFace = CONFIG.Fonts.Regular,
-        TextColor3 = CONFIG.Colors.Accent,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(0, 70, 1, 0),
-        Text = selected,
-        Position = UDim2.new(0.98438, -90, 0, 0)
+    local selectedText = CreateInstance("TextLabel", headerBtn, {
+        TextSize = 13, TextXAlignment = Enum.TextXAlignment.Right, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Accent, BackgroundTransparency = 1, Size = UDim2.new(0, 70, 1, 0), Text = tostring(selected), Position = UDim2.new(0.98438, -90, 0, 0)
     })
     
-    local arrow = CreateInstance("TextLabel", element, {
-        TextSize = 9,
-        FontFace = CONFIG.Fonts.Regular,
-        TextColor3 = CONFIG.Colors.Subtext,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(0, 20, 0, 20),
-        Text = "▼",
-        Position = UDim2.new(1, -26, 0.5, -10)
+    local arrow = CreateInstance("TextLabel", headerBtn, {
+        TextSize = 9, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Subtext, BackgroundTransparency = 1, Size = UDim2.new(0, 20, 0, 20), Text = "▼", Position = UDim2.new(1, -26, 0.5, -10)
     })
     
+    -- Контейнер для опций
     local dropdownList = CreateInstance("Frame", element, {
-        BorderSizePixel = 0,
-        BackgroundColor3 = CONFIG.Colors.Element,
-        Size = UDim2.new(1, 0, 0, 0),
-        Position = UDim2.new(0, 0, 0, 34),
-        Visible = false
+        BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Element, Size = UDim2.new(1, 0, 0, 0), Position = UDim2.new(0, 0, 0, 34), Visible = false, ZIndex = 1
     })
+    CreateInstance("UIListLayout", dropdownList, {Padding = UDim.new(0, 2), SortOrder = Enum.SortOrder.LayoutOrder})
     
-    local listLayout = CreateInstance("UIListLayout", dropdownList, {
-        Padding = UDim.new(0, 2),
-        SortOrder = Enum.SortOrder.LayoutOrder
-    })
-    
-    -- Create option buttons
     for i, option in ipairs(options) do
         local optionBtn = CreateInstance("TextButton", dropdownList, {
-            BorderSizePixel = 0,
-            TextSize = 12,
-            AutoButtonColor = false,
-            TextColor3 = CONFIG.Colors.Text,
-            BackgroundColor3 = CONFIG.Colors.Background,
-            FontFace = CONFIG.Fonts.Regular,
-            Size = UDim2.new(1, 0, 0, 28),
-            Text = option,
-            LayoutOrder = i
+            BorderSizePixel = 0, TextSize = 12, AutoButtonColor = false, TextColor3 = CONFIG.Colors.Text, BackgroundColor3 = CONFIG.Colors.Background, FontFace = CONFIG.Fonts.Regular, Size = UDim2.new(1, 0, 0, 28), Text = option, LayoutOrder = i
         })
         
         optionBtn.MouseButton1Click:Connect(function()
             selected = option
             if flag then CentralUI.Flags[flag] = selected end
-            selectedText.Text = selected
+            selectedText.Text = tostring(selected) -- Фикс: всегда обновляем текст
             
-            -- Hide dropdown
             expanded = false
             dropdownList.Visible = false
             TweenProperty(element, "Size", UDim2.new(1, 0, 0, 34), 0.2)
             arrow.Text = "▼"
-            
             if callback then callback(selected) end
         end)
-        
-        optionBtn.MouseEnter:Connect(function()
-            TweenProperty(optionBtn, "BackgroundColor3", Color3.fromRGB(36, 36, 39), 0.15)
-        end)
-        
-        optionBtn.MouseLeave:Connect(function()
-            TweenProperty(optionBtn, "BackgroundColor3", CONFIG.Colors.Background, 0.15)
-        end)
+        optionBtn.MouseEnter:Connect(function() TweenProperty(optionBtn, "BackgroundColor3", Color3.fromRGB(36, 36, 39), 0.15) end)
+        optionBtn.MouseLeave:Connect(function() TweenProperty(optionBtn, "BackgroundColor3", CONFIG.Colors.Background, 0.15) end)
     end
     
-    element.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            expanded = not expanded
-            if expanded then
-                local totalHeight = 34 + (#options * 30)
-                TweenProperty(element, "Size", UDim2.new(1, 0, 0, totalHeight), 0.2)
-                dropdownList.Visible = true
-                arrow.Text = "▲"
-            else
-                TweenProperty(element, "Size", UDim2.new(1, 0, 0, 34), 0.2)
-                dropdownList.Visible = false
-                arrow.Text = "▼"
-            end
+    headerBtn.MouseButton1Click:Connect(function()
+        expanded = not expanded
+        if expanded then
+            local totalHeight = 34 + (#options * 30)
+            TweenProperty(element, "Size", UDim2.new(1, 0, 0, totalHeight), 0.2)
+            dropdownList.Visible = true
+            arrow.Text = "▲"
+        else
+            TweenProperty(element, "Size", UDim2.new(1, 0, 0, 34), 0.2)
+            dropdownList.Visible = false
+            arrow.Text = "▼"
         end
     end)
     
     return {GetValue = function() return selected end, SetValue = function(val)
         selected = val
         if flag then CentralUI.Flags[flag] = selected end
-        selectedText.Text = selected
+        selectedText.Text = tostring(selected)
     end}
 end
 
@@ -909,47 +561,20 @@ function CentralUI:CreateInput(tab, text, placeholder, default, callback, flag)
     if flag then CentralUI.Flags[flag] = value end
     
     local element = CreateInstance("Frame", tab.Content, {
-        BorderSizePixel = 0,
-        BackgroundColor3 = CONFIG.Colors.Element,
-        Size = UDim2.new(1, 0, 0, 56),
-        Name = "Element"
+        BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Element, Size = UDim2.new(1, 0, 0, 56), Name = "Element"
     })
     CreateInstance("UICorner", element, {CornerRadius = UDim.new(0, 6)})
-    CreateInstance("UIStroke", element, {
-        Transparency = 0.6,
-        Color = CONFIG.Colors.Stroke,
-        ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    })
+    CreateInstance("UIStroke", element, {Transparency = 0.6, Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
     
     CreateInstance("TextLabel", element, {
-        TextSize = 13,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        FontFace = CONFIG.Fonts.Regular,
-        TextColor3 = CONFIG.Colors.Text,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, -24, 0, 20),
-        Text = text,
-        Position = UDim2.new(0, 12, 0, 6)
+        TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Text, BackgroundTransparency = 1, Size = UDim2.new(1, -24, 0, 20), Text = text, Position = UDim2.new(0, 12, 0, 6)
     })
     
     local inputBox = CreateInstance("TextBox", element, {
-        PlaceholderColor3 = CONFIG.Colors.Subtext,
-        BorderSizePixel = 0,
-        TextSize = 13,
-        TextColor3 = CONFIG.Colors.Text,
-        BackgroundColor3 = CONFIG.Colors.Topbar,
-        FontFace = CONFIG.Fonts.Regular,
-        ClearTextOnFocus = false,
-        PlaceholderText = placeholder or "Enter text...",
-        Size = UDim2.new(1, -24, 0, 24),
-        Position = UDim2.new(0, 12, 0, 26),
-        Text = value
+        PlaceholderColor3 = CONFIG.Colors.Subtext, BorderSizePixel = 0, TextSize = 13, TextColor3 = CONFIG.Colors.Text, BackgroundColor3 = CONFIG.Colors.Topbar, FontFace = CONFIG.Fonts.Regular, ClearTextOnFocus = false, PlaceholderText = placeholder or "Enter text...", Size = UDim2.new(1, -24, 0, 24), Position = UDim2.new(0, 12, 0, 26), Text = value
     })
     CreateInstance("UICorner", inputBox, {CornerRadius = UDim.new(0, 4)})
-    CreateInstance("UIStroke", inputBox, {
-        Color = CONFIG.Colors.Stroke,
-        ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    })
+    CreateInstance("UIStroke", inputBox, {Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
     
     inputBox.FocusLost:Connect(function(enterPressed)
         value = inputBox.Text
@@ -970,51 +595,25 @@ function CentralUI:CreateKeybind(tab, text, defaultKey, callback, flag)
     local listening = false
     
     local element = CreateInstance("Frame", tab.Content, {
-        BorderSizePixel = 0,
-        BackgroundColor3 = CONFIG.Colors.Element,
-        Size = UDim2.new(1, 0, 0, 34),
-        Name = "Element"
+        BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Element, Size = UDim2.new(1, 0, 0, 34), Name = "Element"
     })
     CreateInstance("UICorner", element, {CornerRadius = UDim.new(0, 6)})
-    CreateInstance("UIStroke", element, {
-        Transparency = 0.6,
-        Color = CONFIG.Colors.Stroke,
-        ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    })
+    CreateInstance("UIStroke", element, {Transparency = 0.6, Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
     
     CreateInstance("TextLabel", element, {
-        TextSize = 13,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        FontFace = CONFIG.Fonts.Regular,
-        TextColor3 = CONFIG.Colors.Text,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, -100, 1, 0),
-        Text = text,
-        Position = UDim2.new(0, 12, 0, 0)
+        TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Text, BackgroundTransparency = 1, Size = UDim2.new(1, -100, 1, 0), Text = text, Position = UDim2.new(0, 12, 0, 0)
     })
     
     local keyBtn = CreateInstance("TextButton", element, {
-        BorderSizePixel = 0,
-        TextSize = 12,
-        AutoButtonColor = false,
-        TextColor3 = CONFIG.Colors.Accent,
-        BackgroundColor3 = CONFIG.Colors.Topbar,
-        FontFace = CONFIG.Fonts.Medium,
-        Size = UDim2.new(0, 70, 0, 22),
-        Text = currentKey,
-        Position = UDim2.new(1, -80, 0.5, -11)
+        BorderSizePixel = 0, TextSize = 12, AutoButtonColor = false, TextColor3 = CONFIG.Colors.Accent, BackgroundColor3 = CONFIG.Colors.Topbar, FontFace = CONFIG.Fonts.Medium, Size = UDim2.new(0, 70, 0, 22), Text = currentKey, Position = UDim2.new(1, -80, 0.5, -11)
     })
     CreateInstance("UICorner", keyBtn, {CornerRadius = UDim.new(0, 4)})
-    CreateInstance("UIStroke", keyBtn, {
-        Color = CONFIG.Colors.Stroke,
-        ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    })
+    CreateInstance("UIStroke", keyBtn, {Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
     
     keyBtn.MouseButton1Click:Connect(function()
         if not listening then
             listening = true
             keyBtn.Text = "..."
-            
             local connection
             connection = UserInputService.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.Keyboard then
@@ -1023,7 +622,6 @@ function CentralUI:CreateKeybind(tab, text, defaultKey, callback, flag)
                     keyBtn.Text = currentKey
                     listening = false
                     connection:Disconnect()
-                    
                     if callback then callback(currentKey) end
                 end
             end)
@@ -1042,87 +640,34 @@ function CentralUI:CreateColorPicker(tab, text, defaultColor, callback, flag)
     if flag then CentralUI.Flags[flag] = color end
     
     local element = CreateInstance("Frame", tab.Content, {
-        BorderSizePixel = 0,
-        BackgroundColor3 = CONFIG.Colors.Element,
-        Size = UDim2.new(1, 0, 0, 80),
-        Name = "Element"
+        BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Element, Size = UDim2.new(1, 0, 0, 80), Name = "Element"
     })
     CreateInstance("UICorner", element, {CornerRadius = UDim.new(0, 6)})
-    CreateInstance("UIStroke", element, {
-        Transparency = 0.6,
-        Color = CONFIG.Colors.Stroke,
-        ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    })
+    CreateInstance("UIStroke", element, {Transparency = 0.6, Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
     
     CreateInstance("TextLabel", element, {
-        TextSize = 13,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        FontFace = CONFIG.Fonts.Regular,
-        TextColor3 = CONFIG.Colors.Text,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, -60, 0, 20),
-        Text = text,
-        Position = UDim2.new(0, 12, 0, 6)
+        TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Text, BackgroundTransparency = 1, Size = UDim2.new(1, -60, 0, 20), Text = text, Position = UDim2.new(0, 12, 0, 6)
     })
     
     local colorPreview = CreateInstance("Frame", element, {
-        BorderSizePixel = 0,
-        BackgroundColor3 = color,
-        Size = UDim2.new(0, 26, 0, 26),
-        Position = UDim2.new(1, -38, 0, 6)
+        BorderSizePixel = 0, BackgroundColor3 = color, Size = UDim2.new(0, 26, 0, 26), Position = UDim2.new(1, -38, 0, 6)
     })
     CreateInstance("UICorner", colorPreview, {CornerRadius = UDim.new(0, 4)})
-    CreateInstance("UIStroke", colorPreview, {
-        Color = CONFIG.Colors.Stroke,
-        ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    })
+    CreateInstance("UIStroke", colorPreview, {Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
     
-    -- R slider
-    local rBg = CreateInstance("Frame", element, {
-        BorderSizePixel = 0,
-        BackgroundColor3 = CONFIG.Colors.Line,
-        Size = UDim2.new(1, -24, 0, 6),
-        Position = UDim2.new(0, 12, 0, 40)
-    })
+    local rBg = CreateInstance("Frame", element, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Line, Size = UDim2.new(1, -24, 0, 6), Position = UDim2.new(0, 12, 0, 40)})
     CreateInstance("UICorner", rBg, {CornerRadius = UDim.new(0, 2)})
-    
-    local rFill = CreateInstance("Frame", rBg, {
-        BorderSizePixel = 0,
-        BackgroundColor3 = CONFIG.Colors.Accent,
-        Size = UDim2.new(color.R, 0, 1, 0)
-    })
+    local rFill = CreateInstance("Frame", rBg, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Accent, Size = UDim2.new(color.R, 0, 1, 0)})
     CreateInstance("UICorner", rFill, {CornerRadius = UDim.new(0, 2)})
     
-    -- G slider
-    local gBg = CreateInstance("Frame", element, {
-        BorderSizePixel = 0,
-        BackgroundColor3 = CONFIG.Colors.Line,
-        Size = UDim2.new(1, -24, 0, 6),
-        Position = UDim2.new(0, 12, 0, 52)
-    })
+    local gBg = CreateInstance("Frame", element, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Line, Size = UDim2.new(1, -24, 0, 6), Position = UDim2.new(0, 12, 0, 52)})
     CreateInstance("UICorner", gBg, {CornerRadius = UDim.new(0, 2)})
-    
-    local gFill = CreateInstance("Frame", gBg, {
-        BorderSizePixel = 0,
-        BackgroundColor3 = CONFIG.Colors.Accent,
-        Size = UDim2.new(color.G, 0, 1, 0)
-    })
+    local gFill = CreateInstance("Frame", gBg, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Accent, Size = UDim2.new(color.G, 0, 1, 0)})
     CreateInstance("UICorner", gFill, {CornerRadius = UDim.new(0, 2)})
     
-    -- B slider
-    local bBg = CreateInstance("Frame", element, {
-        BorderSizePixel = 0,
-        BackgroundColor3 = CONFIG.Colors.Line,
-        Size = UDim2.new(1, -24, 0, 6),
-        Position = UDim2.new(0, 12, 0, 64)
-    })
+    local bBg = CreateInstance("Frame", element, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Line, Size = UDim2.new(1, -24, 0, 6), Position = UDim2.new(0, 12, 0, 64)})
     CreateInstance("UICorner", bBg, {CornerRadius = UDim.new(0, 2)})
-    
-    local bFill = CreateInstance("Frame", bBg, {
-        BorderSizePixel = 0,
-        BackgroundColor3 = CONFIG.Colors.Accent,
-        Size = UDim2.new(color.B, 0, 1, 0)
-    })
+    local bFill = CreateInstance("Frame", bBg, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Accent, Size = UDim2.new(color.B, 0, 1, 0)})
     CreateInstance("UICorner", bFill, {CornerRadius = UDim.new(0, 2)})
     
     local function updateColor(r, g, b)
@@ -1135,27 +680,9 @@ function CentralUI:CreateColorPicker(tab, text, defaultColor, callback, flag)
         if callback then callback(color) end
     end
     
-    -- Simple click-to-set for now (can be enhanced with dragging)
-    rBg.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local percent = math.clamp((input.Position.X - rBg.AbsolutePosition.X) / rBg.AbsoluteSize.X, 0, 1)
-            updateColor(math.floor(percent * 255), math.floor(color.G * 255), math.floor(color.B * 255))
-        end
-    end)
-    
-    gBg.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local percent = math.clamp((input.Position.X - gBg.AbsolutePosition.X) / gBg.AbsoluteSize.X, 0, 1)
-            updateColor(math.floor(color.R * 255), math.floor(percent * 255), math.floor(color.B * 255))
-        end
-    end)
-    
-    bBg.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local percent = math.clamp((input.Position.X - bBg.AbsolutePosition.X) / bBg.AbsoluteSize.X, 0, 1)
-            updateColor(math.floor(color.R * 255), math.floor(color.G * 255), math.floor(percent * 255))
-        end
-    end)
+    rBg.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then updateColor(math.floor(math.clamp((input.Position.X - rBg.AbsolutePosition.X) / rBg.AbsoluteSize.X, 0, 1) * 255), math.floor(color.G * 255), math.floor(color.B * 255)) end end)
+    gBg.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then updateColor(math.floor(color.R * 255), math.floor(math.clamp((input.Position.X - gBg.AbsolutePosition.X) / gBg.AbsoluteSize.X, 0, 1) * 255), math.floor(color.B * 255)) end end)
+    bBg.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then updateColor(math.floor(color.R * 255), math.floor(color.G * 255), math.floor(math.clamp((input.Position.X - bBg.AbsolutePosition.X) / bBg.AbsoluteSize.X, 0, 1) * 255)) end end)
     
     return {GetValue = function() return color end, SetValue = function(val)
         color = val
@@ -1165,111 +692,48 @@ function CentralUI:CreateColorPicker(tab, text, defaultColor, callback, flag)
 end
 
 function CentralUI:CreateLabel(tab, text)
-    local label = CreateInstance("TextLabel", tab.Content, {
-        TextSize = 13,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        FontFace = CONFIG.Fonts.Regular,
-        TextColor3 = CONFIG.Colors.Text,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 0, 20),
-        Text = text
+    return CreateInstance("TextLabel", tab.Content, {
+        TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Text, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 20), Text = text
     })
-    return label
 end
 
 function CentralUI:CreateParagraph(tab, title, description)
-    local paragraph = CreateInstance("Frame", tab.Content, {
-        Size = UDim2.new(1, 0, 0, 40),
-        BackgroundTransparency = 1
-    })
-    
+    local paragraph = CreateInstance("Frame", tab.Content, {Size = UDim2.new(1, 0, 0, 40), BackgroundTransparency = 1})
     CreateInstance("TextLabel", paragraph, {
-        TextSize = 13,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        FontFace = CONFIG.Fonts.Medium,
-        TextColor3 = CONFIG.Colors.Text,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 0, 18),
-        Text = title
+        TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, FontFace = CONFIG.Fonts.Medium, TextColor3 = CONFIG.Colors.Text, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 18), Text = title
     })
-    
     CreateInstance("TextLabel", paragraph, {
-        TextWrapped = true,
-        TextSize = 12,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        FontFace = CONFIG.Fonts.Regular,
-        TextColor3 = CONFIG.Colors.Subtext,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 0, 18),
-        Text = description,
-        Position = UDim2.new(0, 0, 0, 20)
+        TextWrapped = true, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Subtext, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 18), Text = description, Position = UDim2.new(0, 0, 0, 20)
     })
-    
     return paragraph
 end
 
--- Notification system
-local NotificationContainer = CreateInstance("Frame", ScreenGui, {
-    Size = UDim2.new(0, 300, 1, 0),
-    Position = UDim2.new(1, -320, 0, 0),
-    BackgroundTransparency = 1,
-    Name = "NotificationContainer"
-})
-
-local notificationList = CreateInstance("UIListLayout", NotificationContainer, {
-    Padding = UDim.new(0, 8),
-    SortOrder = Enum.SortOrder.LayoutOrder,
-    VerticalAlignment = Enum.VerticalAlignment.Bottom
-})
+-- Notification System
+local NotificationContainer = CreateInstance("Frame", ScreenGui, {Size = UDim2.new(0, 300, 1, 0), Position = UDim2.new(1, -320, 0, 0), BackgroundTransparency = 1, Name = "NotificationContainer"})
+CreateInstance("UIListLayout", NotificationContainer, {Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder, VerticalAlignment = Enum.VerticalAlignment.Bottom})
 
 function CentralUI:Notify(title, text, duration)
     duration = duration or 5
-    
     local notif = CreateInstance("Frame", NotificationContainer, {
-        BorderSizePixel = 0,
-        BackgroundColor3 = CONFIG.Colors.Topbar,
-        ClipsDescendants = true,
-        Size = UDim2.new(0, 300, 0, 0),
-        Name = "Notification"
+        BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Topbar, ClipsDescendants = true, Size = UDim2.new(0, 300, 0, 0), Name = "Notification"
     })
     CreateInstance("UICorner", notif, {CornerRadius = UDim.new(0, 6)})
-    CreateInstance("UIStroke", notif, {
-        Color = CONFIG.Colors.Stroke,
-        ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    })
+    CreateInstance("UIStroke", notif, {Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
     
     local notifScale = Instance.new("UIScale")
     notifScale.Scale = 0
     notifScale.Parent = notif
     
     CreateInstance("TextLabel", notif, {
-        TextSize = 13,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        FontFace = CONFIG.Fonts.Medium,
-        TextColor3 = CONFIG.Colors.Text,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, -20, 0, 20),
-        Text = title,
-        Position = UDim2.new(0, 12, 0, 8)
+        TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, FontFace = CONFIG.Fonts.Medium, TextColor3 = CONFIG.Colors.Text, BackgroundTransparency = 1, Size = UDim2.new(1, -20, 0, 20), Text = title, Position = UDim2.new(0, 12, 0, 8)
     })
-    
     CreateInstance("TextLabel", notif, {
-        TextWrapped = true,
-        TextSize = 12,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        FontFace = CONFIG.Fonts.Regular,
-        TextColor3 = CONFIG.Colors.Subtext,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, -20, 0, 28),
-        Text = text,
-        Position = UDim2.new(0, 12, 0, 28)
+        TextWrapped = true, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Subtext, BackgroundTransparency = 1, Size = UDim2.new(1, -20, 0, 28), Text = text, Position = UDim2.new(0, 12, 0, 28)
     })
     
-    -- Animate in
     TweenProperty(notif, "Size", UDim2.new(0, 300, 0, 60), 0.3)
     TweenProperty(notifScale, "Scale", 1, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
     
-    -- Auto remove
     task.delay(duration, function()
         TweenProperty(notif, "Size", UDim2.new(0, 300, 0, 0), 0.3)
         TweenProperty(notifScale, "Scale", 0, 0.3)
@@ -1280,37 +744,23 @@ end
 
 -- Watermark
 local Watermark = CreateInstance("Frame", ScreenGui, {
-    Visible = false,
-    BorderSizePixel = 0,
-    BackgroundColor3 = CONFIG.Colors.Background,
-    Size = UDim2.new(0, 180, 0, 28),
-    Position = UDim2.new(1, -200, 0, 20),
-    Name = "Watermark"
+    Visible = false, BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Background, Size = UDim2.new(0, 250, 0, 28), Position = UDim2.new(1, -270, 0, 20), Name = "Watermark"
 })
 CreateInstance("UICorner", Watermark, {CornerRadius = UDim.new(0, 6)})
-CreateInstance("UIStroke", Watermark, {
-    Color = CONFIG.Colors.Stroke,
-    ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-})
+CreateInstance("UIStroke", Watermark, {Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
 
 local watermarkText = CreateInstance("TextLabel", Watermark, {
-    TextSize = 12,
-    FontFace = CONFIG.Fonts.Medium,
-    TextColor3 = CONFIG.Colors.Subtext,
-    BackgroundTransparency = 1,
-    Size = UDim2.new(1, -20, 1, 0),
-    Text = "Central UI | " .. CONFIG.Version,
-    Position = UDim2.new(0, 12, 0, 0)
+    TextSize = 12, FontFace = CONFIG.Fonts.Medium, TextColor3 = CONFIG.Colors.Subtext, BackgroundTransparency = 1, Size = UDim2.new(1, -20, 1, 0), Text = "", Position = UDim2.new(0, 12, 0, 0)
 })
 
-function CentralUI:CreateWatermark(text)
+function CentralUI:CreateWatermark(customText)
     Watermark.Visible = true
-    if text then
-        watermarkText.Text = text .. " | " .. LocalPlayer.Name
+    local executor = GetExecutor()
+    if customText then
+        watermarkText.Text = customText .. " | " .. executor .. " | " .. LocalPlayer.Name
     else
-        watermarkText.Text = "Central UI | " .. LocalPlayer.Name
+        watermarkText.Text = "Central UI " .. CONFIG.Version .. " | " .. executor .. " | " .. LocalPlayer.Name
     end
 end
 
--- Return the library
 return CentralUI
