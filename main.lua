@@ -1,19 +1,8 @@
 --[[
     ╔═══════════════════════════════════════════════════════════════════╗
-    ║                                                                   ║
-    ║   ██████╗███████╗███╗   ██╗████████╗██████╗  █████╗ ██╗           ║
-    ║  ██╔════╝██╔════╝████╗  ██║╚══██╔══╝██╔══██╗██╔══██╗██║           ║
-    ║  ██║     █████╗  ██╔██╗ ██║   ██║   ██████╔╝███████║██║           ║
-    ║  ██║     ██╔══╝  ██║╚██╗██║   ██║   ██╔══██╗██╔══██║██║           ║
-    ║  ╚██████╗███████╗██║ ╚████║   ██║   ██║  ██║██║  ██║███████╗      ║
-    ║   ╚═════╝╚══════╝╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝      ║
-    ║                                                                   ║
-    ║  UI Library for Roblox                                            ║
+    ║  Central UI Library (v1.0.0)                                      ║
     ║  Author: WareSploit                                               ║
-    ║  Version: 1.0.0                                                   ║
-    ║  License: MIT                                                     ║
     ║  GitHub: https://github.com/WareSploit/Central-UI                 ║
-    ║                                                                   ║
     ╚═══════════════════════════════════════════════════════════════════╝
 ]]
 
@@ -23,17 +12,11 @@ local CentralUI = {
     Flags = {}
 }
 
--- ============================================================
--- SERVICES
--- ============================================================
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- ============================================================
--- THEME (Monochrome Dark)
--- ============================================================
 local Theme = {
     Background   = Color3.fromRGB(16, 16, 18),
     Topbar       = Color3.fromRGB(23, 23, 25),
@@ -49,9 +32,6 @@ local Theme = {
 }
 CentralUI.Theme = Theme
 
--- ============================================================
--- UTILS
--- ============================================================
 local function New(class, props, parent)
     local inst = Instance.new(class)
     for k, v in pairs(props) do inst[k] = v end
@@ -59,7 +39,7 @@ local function New(class, props, parent)
     return inst
 end
 
--- ИСПРАВЛЕНИЕ: Переименовано из Font в NewFont
+-- ИСПРАВЛЕНО: Функция переименована в NewFont
 local function NewFont(weight)
     return Font.new("rbxasset://fonts/families/GothamSSm.json", weight or Enum.FontWeight.Regular, Enum.FontStyle.Normal)
 end
@@ -70,10 +50,8 @@ end
 
 local function Stroke(parent, color, transparency, thickness)
     return New("UIStroke", {
-        Color = color or Theme.Stroke,
-        Thickness = thickness or 1,
-        Transparency = transparency or 0,
-        ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+        Color = color or Theme.Stroke, Thickness = thickness or 1,
+        Transparency = transparency or 0, ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
     }, parent)
 end
 
@@ -101,9 +79,7 @@ local function GetGuiParent()
     return LocalPlayer:WaitForChild("PlayerGui")
 end
 
--- ============================================================
 -- NOTIFICATIONS
--- ============================================================
 local notifGui
 local function GetNotifGui()
     if notifGui and notifGui.Parent then return notifGui end
@@ -111,37 +87,21 @@ local function GetNotifGui()
         Name = "CentralUI_Notifications", ResetOnSpawn = false,
         DisplayOrder = 9999, IgnoreGuiInset = true, ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
     }, GetGuiParent())
-
-    local holder = New("Frame", {
-        Name = "Holder", Size = UDim2.new(0, 300, 1, -40),
-        Position = UDim2.new(1, -320, 0, 20), BackgroundTransparency = 1,
-    }, notifGui)
-
-    New("UIListLayout", {
-        SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 8),
-        VerticalAlignment = Enum.VerticalAlignment.Bottom,
-    }, holder)
-
+    local holder = New("Frame", { Name = "Holder", Size = UDim2.new(0, 300, 1, -40), Position = UDim2.new(1, -320, 0, 20), BackgroundTransparency = 1 }, notifGui)
+    New("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 8), VerticalAlignment = Enum.VerticalAlignment.Bottom }, holder)
     return notifGui
 end
 
 function CentralUI:Notify(config)
     config = config or {}
     local holder = GetNotifGui().Holder
-    local notif = New("Frame", {
-        Size = UDim2.new(1, 0, 0, 64), BackgroundColor3 = Theme.Topbar,
-        BorderSizePixel = 0, ClipsDescendants = true,
-    }, holder)
+    local notif = New("Frame", { Size = UDim2.new(1, 0, 0, 64), BackgroundColor3 = Theme.Topbar, BorderSizePixel = 0, ClipsDescendants = true }, holder)
     Corner(notif, 6); Stroke(notif, Theme.Stroke, 0)
-
     local scale = New("UIScale", { Scale = 0 }, notif)
-
     Label(notif, config.Title or "Notification", UDim2.new(1, -20, 0, 20), UDim2.new(0, 12, 0, 8), Theme.Text, NewFont(Enum.FontWeight.Medium), 13)
     local content = Label(notif, config.Content or "", UDim2.new(1, -20, 0, 28), UDim2.new(0, 12, 0, 28), Theme.SubText, NewFont(), 12)
     content.TextWrapped = true
-
     Tween(scale, { Scale = 1 }, 0.35, Enum.EasingStyle.Back)
-
     task.delay(config.Duration or 5, function()
         if notif and notif.Parent then
             Tween(scale, { Scale = 0 }, 0.2).Completed:Wait()
@@ -150,72 +110,32 @@ function CentralUI:Notify(config)
     end)
 end
 
--- ============================================================
 -- WATERMARK
--- ============================================================
 function CentralUI:CreateWatermark(config)
     config = config or {}
-    local wmGui = New("ScreenGui", {
-        Name = "CentralUI_Watermark", ResetOnSpawn = false,
-        DisplayOrder = 9998, IgnoreGuiInset = true,
-    }, GetGuiParent())
-
-    local frame = New("Frame", {
-        Size = UDim2.new(0, 180, 0, 28), Position = UDim2.new(1, -200, 0, 20),
-        BackgroundColor3 = Theme.Background, BorderSizePixel = 0,
-    }, wmGui)
+    local wmGui = New("ScreenGui", { Name = "CentralUI_Watermark", ResetOnSpawn = false, DisplayOrder = 9998, IgnoreGuiInset = true }, GetGuiParent())
+    local frame = New("Frame", { Size = UDim2.new(0, 180, 0, 28), Position = UDim2.new(1, -200, 0, 20), BackgroundColor3 = Theme.Background, BorderSizePixel = 0 }, wmGui)
     Corner(frame, 6); Stroke(frame, Theme.Stroke, 0)
-
     local lbl = Label(frame, config.Text or ("Central UI | v" .. self.Version), UDim2.new(1, -20, 1, 0), UDim2.new(0, 12, 0, 0), Theme.SubText, NewFont(Enum.FontWeight.Medium), 12)
-
-    return {
-        Set = function(t) lbl.Text = t end,
-        Remove = function() wmGui:Destroy() end,
-        Frame = frame,
-    }
+    return { Set = function(t) lbl.Text = t end, Remove = function() wmGui:Destroy() end, Frame = frame }
 end
 
--- ============================================================
--- MAIN WINDOW
--- ============================================================
+-- WINDOW
 function CentralUI:CreateWindow(config)
     config = config or {}
     local parent = GetGuiParent()
-    local old = parent:FindFirstChild("CentralUI")
-    if old then old:Destroy() end
-
-    local sg = New("ScreenGui", {
-        Name = "CentralUI", ResetOnSpawn = false, DisplayOrder = 100,
-        IgnoreGuiInset = true, ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-    }, parent)
-
+    if parent:FindFirstChild("CentralUI") then parent.CentralUI:Destroy() end
+    local sg = New("ScreenGui", { Name = "CentralUI", ResetOnSpawn = false, DisplayOrder = 100, IgnoreGuiInset = true, ZIndexBehavior = Enum.ZIndexBehavior.Sibling }, parent)
     local window = { Tabs = {}, ActiveTab = nil, Config = config, ScreenGui = sg }
 
-    -- WELCOME SCREEN
     local welcomer, fill, percent
     if config.LoadingTitle ~= false then
-        welcomer = New("Frame", {
-            Name = "WelcomerFrame", Size = UDim2.new(0.467, 0, 0.397, 0),
-            Position = UDim2.new(0.274, 0, 0.317, 0), BackgroundColor3 = Color3.fromRGB(11, 11, 13),
-            BorderSizePixel = 0,
-        }, sg)
+        welcomer = New("Frame", { Name = "WelcomerFrame", Size = UDim2.new(0.467, 0, 0.397, 0), Position = UDim2.new(0.274, 0, 0.317, 0), BackgroundColor3 = Color3.fromRGB(11, 11, 13), BorderSizePixel = 0 }, sg)
         Corner(welcomer, 10); Stroke(welcomer, Theme.Stroke, 0.5)
-
-        local wContent = New("Frame", {
-            Name = "Content", Size = UDim2.new(0, 420, 0, 200),
-            Position = UDim2.new(0.5, -210, 0.5, -100), BackgroundTransparency = 1,
-        }, welcomer)
-
-        -- MAIN-SVG (иконка загрузки)
-        New("ImageLabel", {
-            Name = "MAIN-SVG", Image = config.Logo or "rbxassetid://10442402750",
-            Size = UDim2.new(0, 107, 0, 74), Position = UDim2.new(0.370, 0, -0.066, 0),
-            BackgroundTransparency = 1, BorderSizePixel = 0,
-        }, wContent)
-
+        local wContent = New("Frame", { Name = "Content", Size = UDim2.new(0, 420, 0, 200), Position = UDim2.new(0.5, -210, 0.5, -100), BackgroundTransparency = 1 }, welcomer)
+        New("ImageLabel", { Name = "MAIN-SVG", Image = config.Logo or "rbxassetid://10442402750", Size = UDim2.new(0, 107, 0, 74), Position = UDim2.new(0.370, 0, -0.066, 0), BackgroundTransparency = 1, BorderSizePixel = 0 }, wContent)
         Label(wContent, config.LoadingTitle or "Central UI", UDim2.new(1, 0, 0, 46), UDim2.new(0, 0, 0, 36), Theme.Text, NewFont(Enum.FontWeight.Bold), 34, Enum.TextXAlignment.Center)
         Label(wContent, config.LoadingSubtitle or "Loading, please wait...", UDim2.new(1, 0, 0, 18), UDim2.new(0, 0, 0, 82), Theme.SubText, NewFont(), 13, Enum.TextXAlignment.Center)
-
         local bar = New("Frame", { Name = "ProgressBar", Size = UDim2.new(0.7, 0, 0, 3), Position = UDim2.new(0.15, 0, 0, 130), BackgroundColor3 = Theme.Element, BorderSizePixel = 0 }, wContent)
         Corner(bar, 2)
         fill = New("Frame", { Name = "Fill", Size = UDim2.new(0, 0, 1, 0), BackgroundColor3 = Theme.Accent, BorderSizePixel = 0 }, bar)
@@ -224,31 +144,21 @@ function CentralUI:CreateWindow(config)
         Label(welcomer, "v" .. self.Version, UDim2.new(0, 80, 0, 18), UDim2.new(1, -90, 1, -28), Theme.SubText, NewFont(), 11, Enum.TextXAlignment.Right)
     end
 
-    -- MAIN WINDOW
-    local main = New("Frame", {
-        Name = "MainWindow", Size = UDim2.new(0, 540, 0, 380),
-        Position = UDim2.new(0.5, -270, 0.5, -190), BackgroundColor3 = Theme.Background,
-        BorderSizePixel = 0, ClipsDescendants = true, Visible = false,
-    }, sg)
+    local main = New("Frame", { Name = "MainWindow", Size = UDim2.new(0, 540, 0, 380), Position = UDim2.new(0.5, -270, 0.5, -190), BackgroundColor3 = Theme.Background, BorderSizePixel = 0, ClipsDescendants = true, Visible = false }, sg)
     Corner(main, 10); Stroke(main, Theme.Stroke, 0.5)
     local mainScale = New("UIScale", { Scale = 1 }, main)
 
-    -- TOPBAR
     local topbar = New("Frame", { Name = "Topbar", Size = UDim2.new(1, 0, 0, 46), BackgroundColor3 = Theme.Topbar, BorderSizePixel = 0 }, main)
     Corner(topbar, 10)
     New("Frame", { Size = UDim2.new(1, 0, 0, 1), Position = UDim2.new(0, 0, 1, -1), BackgroundColor3 = Theme.Stroke, BorderSizePixel = 0 }, topbar)
-    
-    -- MAIN-SVG (иконка в топбаре)
     New("ImageLabel", { Name = "MAIN-SVG", Image = config.Logo or "rbxassetid://10442402750", Size = UDim2.new(0, 62, 0, 55), Position = UDim2.new(0, 0, -0.108, 0), BackgroundTransparency = 1, BorderSizePixel = 0 }, topbar)
     Label(topbar, config.Name or "Central UI", UDim2.new(0.914, -120, 1, 0), UDim2.new(0, 62, 0, 0), Theme.Text, NewFont(Enum.FontWeight.Medium), 16)
 
     local minBtn = New("TextButton", { Name = "MinBtn", Text = "—", Size = UDim2.new(0, 28, 0, 28), Position = UDim2.new(1, -76, 0.5, -14), BackgroundColor3 = Theme.Element, BorderSizePixel = 0, TextColor3 = Theme.SubText, FontFace = NewFont(Enum.FontWeight.Bold), TextSize = 14, AutoButtonColor = false }, topbar)
     Corner(minBtn, 4); Stroke(minBtn, Theme.Stroke)
-
     local closeBtn = New("TextButton", { Name = "CloseBtn", Text = "✕", Size = UDim2.new(0, 28, 0, 28), Position = UDim2.new(1, -42, 0.5, -14), BackgroundColor3 = Theme.Element, BorderSizePixel = 0, TextColor3 = Theme.SubText, FontFace = NewFont(Enum.FontWeight.Bold), TextSize = 12, AutoButtonColor = false }, topbar)
     Corner(closeBtn, 4); Stroke(closeBtn, Theme.Stroke)
 
-    -- DRAG LOGIC
     local dragging, dragInput, dragStart, startPos
     topbar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -266,16 +176,13 @@ function CentralUI:CreateWindow(config)
         end
     end)
 
-    -- TAB HOLDER
     local tabHolder = New("Frame", { Name = "TabHolder", Size = UDim2.new(0, 140, 1, -46), Position = UDim2.new(0, 0, 0, 46), BackgroundColor3 = Theme.Background, BorderSizePixel = 0 }, main)
     local tabScroll = New("ScrollingFrame", { Name = "TabScroll", Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 2, ScrollBarImageColor3 = Theme.SubText }, tabHolder)
     New("UIPadding", { PaddingTop = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8), PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) }, tabScroll)
     New("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 4) }, tabScroll)
 
-    -- CONTENT HOLDER
     local contentHolder = New("Frame", { Name = "ContentHolder", Size = UDim2.new(1, -140, 1, -46), Position = UDim2.new(0, 140, 0, 46), BackgroundTransparency = 1, ClipsDescendants = true }, main)
 
-    -- WATERMARK
     local watermark = nil
     if config.Watermark ~= false then
         watermark = New("Frame", { Name = "Watermark", Size = UDim2.new(0, 180, 0, 28), Position = UDim2.new(1, -200, 0, 20), BackgroundColor3 = Theme.Background, BorderSizePixel = 0, Visible = false }, sg)
@@ -283,7 +190,6 @@ function CentralUI:CreateWindow(config)
         Label(watermark, "Central UI | " .. LocalPlayer.Name, UDim2.new(1, -20, 1, 0), UDim2.new(0, 12, 0, 0), Theme.SubText, NewFont(Enum.FontWeight.Medium), 12)
     end
 
-    -- WINDOW METHODS
     local isOpen = true
     function window:Toggle(force)
         local target = (force ~= nil) and force or (not isOpen)
@@ -295,7 +201,6 @@ function CentralUI:CreateWindow(config)
             Tween(mainScale, { Scale = 0 }, 0.15).Completed:Wait(); main.Visible = false
         end
     end
-
     closeBtn.MouseButton1Click:Connect(function() window:Toggle(false) end)
     minBtn.MouseButton1Click:Connect(function() window:Toggle(false) end)
     UserInputService.InputBegan:Connect(function(input, gp)
@@ -303,34 +208,24 @@ function CentralUI:CreateWindow(config)
         if input.KeyCode == Enum.KeyCode.RightControl or input.KeyCode == Enum.KeyCode.LeftControl then window:Toggle() end
     end)
 
-    -- CREATE TAB
     function window:CreateTab(name, iconId)
         local tab = { Name = name, Elements = {}, _window = window }
         local btn = New("TextButton", { Name = "Tab_" .. name, Text = name, Size = UDim2.new(1, 0, 0, 32), BackgroundColor3 = Theme.Element, BorderSizePixel = 0, TextColor3 = Theme.Text, FontFace = NewFont(Enum.FontWeight.Medium), TextSize = 13, AutoButtonColor = false, LayoutOrder = #self.Tabs + 1 }, tabScroll)
         Corner(btn, 6)
-        
-        -- USER-IMAGE (иконка вкладки)
-        if iconId then
-            New("ImageLabel", { Name = "USER-IMAGE", Image = iconId, Size = UDim2.new(0, 20, 0, 19), Position = UDim2.new(0.104, 0, 0.187, 0), BackgroundTransparency = 1, BorderSizePixel = 0, ImageColor3 = Theme.Accent }, btn)
-        end
+        if iconId then New("ImageLabel", { Name = "USER-IMAGE", Image = iconId, Size = UDim2.new(0, 20, 0, 19), Position = UDim2.new(0.104, 0, 0.187, 0), BackgroundTransparency = 1, BorderSizePixel = 0, ImageColor3 = Theme.Accent }, btn) end
 
         local content = New("ScrollingFrame", { Name = "Content_" .. name, Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 3, ScrollBarImageColor3 = Theme.Stroke, Visible = false, LayoutOrder = #self.Tabs + 1 }, contentHolder)
         New("UIPadding", { PaddingTop = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8), PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) }, content)
         New("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 6) }, content)
-
         tab.Button = btn; tab.Content = content; table.insert(self.Tabs, tab)
 
         btn.MouseButton1Click:Connect(function()
             for _, other in ipairs(window.Tabs) do other.Content.Visible = false; Tween(other.Button, { BackgroundColor3 = Theme.Element }, 0.15); other.Button.TextColor3 = Theme.SubText end
             content.Visible = true; Tween(btn, { BackgroundColor3 = Theme.Accent }, 0.15); btn.TextColor3 = Theme.Background; window.ActiveTab = tab
         end)
-
         if #self.Tabs == 1 then content.Visible = true; btn.BackgroundColor3 = Theme.Accent; btn.TextColor3 = Theme.Background; window.ActiveTab = tab
         else btn.TextColor3 = Theme.SubText end
 
-        -- ============================================================
-        -- ELEMENTS
-        -- ============================================================
         local order = 0
         local function NextOrder() order = order + 1; return order end
         local function ElemFrame(h)
@@ -504,7 +399,6 @@ function CentralUI:CreateWindow(config)
         return tab
     end
 
-    -- RUN ANIMATION
     if welcomer then
         task.spawn(function()
             welcomer.BackgroundTransparency = 1; Tween(welcomer, { BackgroundTransparency = 0 }, 0.4)
