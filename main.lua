@@ -1,6 +1,6 @@
 --!nolint UndefinedVariable
 --[=[
-    Central UI Library v5.0 (Stable Core)
+    Central UI Library v5.1 (Always On Top Fix)
     Monochrome Dark Theme
     Author: WareSploit
     Repository: https://github.com/WareSploit/Central-UI
@@ -35,7 +35,7 @@ local CONFIG = {
         Bold = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
     },
     LogoID = "rbxassetid://10442402750",
-    Version = "v5.0.0",
+    Version = "v5.1.0",
     ConfigFolder = "CentralUI_Configs"
 }
 
@@ -74,14 +74,16 @@ end
 -- Setup Config Folder
 if makefolder then pcall(makefolder, CONFIG.ConfigFolder) end
 
--- ScreenGui (FIXED: ResetOnSpawn false, High DisplayOrder)
+-- ==========================================
+-- SCREEN GUI (FIXED FOR ALWAYS ON TOP)
+-- ==========================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CentralUI"
-ScreenGui.IgnoreGuiInset = true
-ScreenGui.DisplayOrder = 999999 -- Always on top
-ScreenGui.ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-ScreenGui.ResetOnSpawn = false -- FIXED: Persists after death
+ScreenGui.IgnoreGuiInset = true       -- FIX: Allows window to go under top bar
+ScreenGui.DisplayOrder = 999999       -- FIX: Highest possible order
+ScreenGui.ScreenInsets = Enum.ScreenInsets.None -- FIX: No safe area insets
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global -- FIX: Z-index works globally
+ScreenGui.ResetOnSpawn = false        -- FIX: Persists after death
 ScreenGui.Parent = PlayerGui
 
 -- ==========================================
@@ -326,7 +328,7 @@ function CentralUI:RemoveTab(tabData)
 end
 
 -- ==========================================
--- UI ELEMENTS (FIXED CALLBACKS)
+-- UI ELEMENTS
 -- ==========================================
 function CentralUI:CreateSection(tab, title)
     local section = CreateInstance("Frame", tab.Content, {Size = UDim2.new(1, 0, 0, 24), BackgroundTransparency = 1})
