@@ -39,7 +39,7 @@ local CONFIG = {
 }
 
 CentralUI.Flags = {}
-CentralUI.Registry = {} -- Stores elements for config loading
+CentralUI.Registry = {}
 
 local function GetExecutor()
     local executors = { "Solara", "Xeno", "Velocity", "Madium", "Real", "Potassium", "Volt" }
@@ -85,7 +85,7 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = PlayerGui
 
 -- ==========================================
--- WELCOME FRAME (From your G2L)
+-- WELCOME FRAME
 -- ==========================================
 local WelcomerFrame = CreateInstance("Frame", ScreenGui, {
     BorderSizePixel = 0, BackgroundColor3 = Color3.fromRGB(11, 11, 13),
@@ -169,18 +169,20 @@ CreateInstance("ImageLabel", Topbar, {
     Size = UDim2.new(0, 62, 0, 55), BackgroundTransparency = 1, Name = "MAIN-SVG", Position = UDim2.new(0, 0, -0.1087, 0)
 })
 
+-- FIX: Added ZIndex = 10 to ensure buttons are on top and clickable
 local MinBtn = CreateInstance("TextButton", Topbar, {
     BorderSizePixel = 0, TextSize = 14, AutoButtonColor = false, TextColor3 = CONFIG.Colors.Subtext,
     BackgroundColor3 = CONFIG.Colors.Element, FontFace = CONFIG.Fonts.Bold,
-    Size = UDim2.new(0, 28, 0, 28), Text = "—", Name = "MinBtn", Position = UDim2.new(1, -76, 0.5, -14)
+    Size = UDim2.new(0, 28, 0, 28), Text = "—", Name = "MinBtn", Position = UDim2.new(1, -76, 0.5, -14), ZIndex = 10
 })
 CreateInstance("UICorner", MinBtn, {CornerRadius = UDim.new(0, 4)})
 CreateInstance("UIStroke", MinBtn, {Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
 
+-- FIX: Added ZIndex = 10
 local CloseBtn = CreateInstance("TextButton", Topbar, {
     BorderSizePixel = 0, TextSize = 12, AutoButtonColor = false, TextColor3 = CONFIG.Colors.Subtext,
     BackgroundColor3 = CONFIG.Colors.Element, FontFace = CONFIG.Fonts.Bold,
-    Size = UDim2.new(0, 28, 0, 28), Text = "✕", Name = "CloseBtn", Position = UDim2.new(1, -42, 0.5, -14)
+    Size = UDim2.new(0, 28, 0, 28), Text = "✕", Name = "CloseBtn", Position = UDim2.new(1, -42, 0.5, -14), ZIndex = 10
 })
 CreateInstance("UICorner", CloseBtn, {CornerRadius = UDim.new(0, 4)})
 CreateInstance("UIStroke", CloseBtn, {Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
@@ -206,6 +208,7 @@ end)
 -- Minimize & Close Logic
 local isMinimized = false
 MinBtn.MouseButton1Click:Connect(function()
+    dragging = false -- FIX: Stop dragging on click to prevent conflict
     isMinimized = not isMinimized
     if isMinimized then
         TabHolder.Visible = false; ContentHolder.Visible = false
@@ -411,7 +414,7 @@ function CentralUI:CreateSlider(tab, text, min, max, default, callback, flag)
     return obj
 end
 
--- FIXED DROPDOWN
+-- DROPDOWN
 function CentralUI:CreateDropdown(tab, text, options, default, callback, flag)
     local selected = default or options[1]
     if flag then CentralUI.Flags[flag] = selected end
@@ -421,7 +424,6 @@ function CentralUI:CreateDropdown(tab, text, options, default, callback, flag)
     CreateInstance("UICorner", element, {CornerRadius = UDim.new(0, 6)})
     CreateInstance("UIStroke", element, {Transparency = 0.6, Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
     
-    -- Header Button (FIX: Text won't disappear because it's just a button now)
     local headerBtn = CreateInstance("TextButton", element, {BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 34), Text = "", ZIndex = 2})
     local lbl = CreateInstance("TextLabel", headerBtn, {TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Text, BackgroundTransparency = 1, Size = UDim2.new(1, -100, 1, 0), Text = text, Position = UDim2.new(0, 12, 0, 0)})
     local selectedText = CreateInstance("TextLabel", headerBtn, {TextSize = 13, TextXAlignment = Enum.TextXAlignment.Right, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Accent, BackgroundTransparency = 1, Size = UDim2.new(0, 70, 1, 0), Text = selected, Position = UDim2.new(0.98438, -90, 0, 0)})
@@ -575,7 +577,6 @@ function CentralUI:LoadConfig(configName)
             if success2 then
                 for flag, value in pairs(decoded) do
                     CentralUI.Flags[flag] = value
-                    -- Update UI Elements based on Registry
                     for _, element in ipairs(CentralUI.Registry) do
                         if element.Flag == flag and element.SetValue then
                             pcall(function() element.SetValue(value) end)
@@ -610,7 +611,6 @@ function CentralUI:GetConfigList()
     return configs
 end
 
--- Auto UI for Config Manager
 function CentralUI:CreateConfigManager(tab)
     CentralUI:CreateSection(tab, "Config Manager")
     
@@ -622,7 +622,7 @@ function CentralUI:CreateConfigManager(tab)
         if name ~= "" then
             if CentralUI:SaveConfig(name) then
                 CentralUI:Notify("Config", "Saved: " .. name, 3)
-                listDropdown.SetValue(name) -- Update visual
+                listDropdown.SetValue(name)
             else
                 CentralUI:Notify("Config", "Failed to save!", 3)
             end
