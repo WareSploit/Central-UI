@@ -1,85 +1,58 @@
 # Central UI
 
-> Dark monochrome UI library for Roblox. Clean API, zero dependencies, works with `loadstring`.
+> **Monochrome Dark** UI library for Roblox. Clean API, zero dependencies, fully compatible with `loadstring`.
 
-![Version](https://img.shields.io/badge/version-1.0.0-informational)
-![License](https://img.shields.io/badge/license-MIT-green)
+![Roblox](https://img.shields.io/badge/Platform-Roblox-00A2FF?style=for-the-badge&logo=roblox&logoColor=white)
+![Version](https://img.shields.io/badge/version-4.2.0-informational?style=for-the-badge)
+![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
+
+---
+
+## ✨ Features
+
+- 🎨 **Strict Monochrome Design**: Inspired by Rayfield, but darker and cleaner. No bright colors.
+- ⚡ **Zero Dependencies**: Works instantly via `loadstring`.
+- 🔄 **Dynamic Tabs**: Add, remove, or update tabs and their icons at runtime.
+- 💾 **Config System**: Built-in Save/Load/Delete system with JSON support.
+- 🔍 **Executor Detection**: Automatically detects Solara, Xeno, Velocity, etc., in the watermark.
+- 🛠️ **Full Control**: Minimize to topbar, drag-and-drop, and Ctrl toggle.
 
 ---
 
 ## 🚀 Installation
 
-```lua
+Copy and paste this into your executor:
+lua
 local CentralUI = loadstring(game:HttpGet(
-    "https://raw.githubusercontent.com/YOUR_NAME/CentralUI/main/main.lua"
+"https://raw.githubusercontent.com/WareSploit/Central-UI/main/main.lua?v=4"
 ))()
-```
+
+---
 
 ## 📖 Quick Start
 
 ```lua
-local Win = CentralUI:CreateWindow({
-    Name = "My Menu",
-    LoadingTitle = "Central UI",
-    LoadingSubtitle = "by YourName",
-    Logo = "rbxassetid://10442402750",
-})
+-- 1. Initialize Library
+local CentralUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/WareSploit/Central-UI/main/main.lua?v=4"))()
 
-local Tab = Win:CreateTab("Main", "rbxassetid://10723407389")
+-- 2. Customize Window Title
+CentralUI:SetTitle("My Custom Hub")
 
-Tab:CreateButton({
-    Name = "Click Me",
-    Callback = function() print("Clicked!") end,
-})
-```
+-- 3. Create Tabs (Name, ImageID)
+local MainTab = CentralUI:CreateTab("Main", "rbxassetid://10723407389")
+local SettingsTab = CentralUI:CreateTab("Settings", "rbxassetid://10734950309")
 
-## 🎨 Elements
+-- 4. Add Elements
+CentralUI:CreateSection(MainTab, "General")
 
-| Method | Description |
-|--------|-------------|
-| `Tab:CreateButton({Name, Callback})` | Simple button |
-| `Tab:CreateToggle({Name, CurrentValue, Flag, Callback})` | Toggle switch |
-| `Tab:CreateSlider({Name, Range, Increment, CurrentValue, Suffix, Flag, Callback})` | Range slider |
-| `Tab:CreateInput({Name, PlaceholderText, Flag, Callback})` | Text input |
-| `Tab:CreateDropdown({Name, Options, CurrentOption, Flag, Callback})` | Dropdown with inline expand |
-| `Tab:CreateKeybind({Name, CurrentKeybind, Flag, OnPressed})` | Keybind picker + listener |
-| `Tab:CreateColorPicker({Name, Color, Flag, Callback})` | RGB color picker |
-| `Tab:CreateSection(text)` | Section divider |
-| `Tab:CreateLabel(text)` | Static label |
-| `Tab:CreateParagraph({Title, Content})` | Title + wrapped body |
+CentralUI:CreateButton(MainTab, "Click Me", function()
+    CentralUI:Notify("Success", "Button clicked!", 3)
+end)
 
-## 📢 Notifications & Watermark
+local speedSlider = CentralUI:CreateSlider(MainTab, "Walk Speed", 16, 100, 16, function(val)
+    print("Speed:", val)
+end, "walk_speed") -- 'walk_speed' is the Flag name
 
-```lua
-CentralUI:Notify({
-    Title = "Hello",
-    Content = "Welcome!",
-    Duration = 5,
-})
-
-CentralUI:CreateWatermark({ Text = "Central UI | v1.0.0" })
-```
-
-## 🎛️ Window Controls
-
-- **Close / Min** — buttons in topbar
-- **Drag** — hold topbar
-- **Toggle window** — `RightCtrl` or `LeftCtrl`
-
-## 🔒 Preserved Elements
-
-- `MAIN-SVG` — library logo (`rbxassetid://10442402750`)
-- `USER-IMAGE` — per-tab icon, set via `CreateTab(name, iconId)`
-
-## 🧩 Flags
-
-Any element accepting `Flag = "..."` stores its value in `CentralUI.Flags`:
-
-```lua
-print(CentralUI.Flags.Speed)   -- 50
-print(CentralUI.Flags.Mode)    -- "Alpha"
-```
-
-## 📄 License
-
-MIT — free to use, modify, and distribute.
+-- 5. Show Watermark (Auto-detects Executor)
+CentralUI:CreateWatermark() 
+-- Output: "Central UI v4.2.0 | Solara"
