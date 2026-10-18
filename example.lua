@@ -1,135 +1,136 @@
--- Central UI Library v4.2 - Example Script
--- Demonstrates all available elements and features
+-- Central UI Library v5.2 - Clean Example (No Icons)
+-- Demonstrates all features with a minimalistic look
 
-local CentralUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/WareSploit/Central-UI/main/main.lua?v=4"))()
+local CentralUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/WareSploit/Central-UI/main/main.lua?v=5"))()
 
--- 1. Change window title
-CentralUI:SetTitle("My Awesome Hub")
+-- 1. Setup Window
+CentralUI:SetTitle("Central UI Demo")
+CentralUI:CreateWatermark() 
 
--- 2. Create tabs with custom images
-local MainTab = CentralUI:CreateTab("Main", "rbxassetid://10723407389")
-local SettingsTab = CentralUI:CreateTab("Settings", "rbxassetid://10734950309")
-local VisualsTab = CentralUI:CreateTab("Visuals", "rbxassetid://10734934347")
+-- 2. Create Tabs (NO ICONS - passing nil or just name)
+local MainTab = CentralUI:CreateTab("Main")
+local VisualsTab = CentralUI:CreateTab("Visuals")
+local SettingsTab = CentralUI:CreateTab("Settings")
+local AboutTab = CentralUI:CreateTab("About")
 
 -- ==========================================
--- MAIN TAB EXAMPLES
+-- MAIN TAB: Basic Elements
 -- ==========================================
+CentralUI:CreateSection(MainTab, "General Controls")
 
-CentralUI:CreateSection(MainTab, "General")
-
--- Button
-CentralUI:CreateButton(MainTab, "Click Me", function()
-    CentralUI:Notify("Action", "You clicked the button!", 3)
+-- Button with Callback
+CentralUI:CreateButton(MainTab, "Print Hello World", function()
+    print("Hello from Central UI!")
+    CentralUI:Notify("Console", "Check your output window!", 3)
 end)
 
--- Toggle with flag (saved in config)
-local toggleFeature = CentralUI:CreateToggle(MainTab, "Enable Feature", true, function(enabled)
-    print("Feature is now:", enabled)
-end, "feature_enabled")
+-- Toggle with Flag (Saved in Config)
+local flyToggle = CentralUI:CreateToggle(MainTab, "Enable Fly Mode", false, function(state)
+    if state then
+        CentralUI:Notify("Fly", "Fly Enabled! (Press Space to go up)", 3)
+    else
+        CentralUI:Notify("Fly", "Fly Disabled", 3)
+    end
+end, "fly_enabled")
 
--- Slider with flag
-local speedSlider = CentralUI:CreateSlider(MainTab, "Walk Speed", 16, 100, 16, function(value)
-    -- game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = value
+-- Slider with Flag
+local speedSlider = CentralUI:CreateSlider(MainTab, "Walk Speed", 16, 100, 16, function(val)
+    if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = val
+    end
 end, "walk_speed")
 
--- Input field
-local nicknameInput = CentralUI:CreateInput(MainTab, "Nickname", "Enter name...", "", function(value)
-    print("Nickname set to:", value)
-end, "player_nickname")
-
--- Dropdown
-local modeDropdown = CentralUI:CreateDropdown(MainTab, "Aim Mode", {"Silent", "Legit", "Rage"}, "Legit", function(selected)
-    print("Mode selected:", selected)
-end, "aim_mode")
+-- Input Field
+CentralUI:CreateInput(MainTab, "Chat Message", "Type here...", "", function(text)
+    CentralUI:Notify("Chat", "You typed: " .. text, 3)
+end, "chat_msg")
 
 -- Keybind
-local aimKey = CentralUI:CreateKeybind(MainTab, "Aim Key", "E", function(key)
-    print("Aim key changed to:", key)
-end, "aim_keybind")
+CentralUI:CreateKeybind(MainTab, "Toggle Fly Key", "F", function(key)
+    CentralUI:Notify("Keybind", "Fly key changed to: " .. key, 3)
+end, "fly_key")
+
+-- Dropdown
+CentralUI:CreateDropdown(MainTab, "Theme Color", {"Dark", "Light", "Blue", "Red"}, "Dark", function(selected)
+    CentralUI:Notify("Theme", "Selected: " .. selected, 3)
+end, "theme_choice")
 
 -- Color Picker
-local espColor = CentralUI:CreateColorPicker(MainTab, "ESP Color", Color3.fromRGB(255, 0, 0), function(color)
-    print("Color changed")
+CentralUI:CreateColorPicker(MainTab, "UI Accent Color", Color3.fromRGB(221, 221, 226), function(color)
+    print("Color picked:", color)
+end, "accent_color")
+
+CentralUI:CreateLabel(MainTab, "Status: Ready")
+CentralUI:CreateParagraph(MainTab, "Info", "This is a demonstration of the Central UI library. All elements are functional.")
+
+-- ==========================================
+-- VISUALS TAB: ESP Demo
+-- ==========================================
+CentralUI:CreateSection(VisualsTab, "ESP Settings")
+
+-- Toggle ESP
+local espToggle = CentralUI:CreateToggle(VisualsTab, "Enable Player ESP", false, function(enabled)
+    if enabled then
+        CentralUI:Notify("ESP", "ESP Enabled (Demo)", 3)
+    else
+        CentralUI:Notify("ESP", "ESP Disabled", 3)
+    end
+end, "esp_enabled")
+
+-- ESP Color
+CentralUI:CreateColorPicker(VisualsTab, "ESP Box Color", Color3.fromRGB(255, 0, 0), function(color)
+    -- Update existing ESP boxes color
 end, "esp_color")
 
-CentralUI:CreateLabel(MainTab, "Status: Active")
-CentralUI:CreateParagraph(MainTab, "Info", "This is a demonstration of the Central UI library capabilities.")
+-- Dropdown for ESP Type
+CentralUI:CreateDropdown(VisualsTab, "ESP Type", {"2D Box", "3D Box", "Skeleton"}, "2D Box", function(type)
+    print("ESP Type set to:", type)
+end, "esp_type")
 
 -- ==========================================
--- SETTINGS & CONFIG MANAGER
+-- SETTINGS TAB: Config Manager
 -- ==========================================
+CentralUI:CreateSection(SettingsTab, "Configuration")
 
--- This creates a full config manager interface automatically
+-- This creates a FULL config manager interface automatically!
 CentralUI:CreateConfigManager(SettingsTab)
 
--- ==========================================
--- VISUALS TAB (Dynamic Management Demo)
--- ==========================================
+-- Manual Config Buttons
+CentralUI:CreateButton(SettingsTab, "Reset All Settings", function()
+    CentralUI.Flags = {}
+    CentralUI:Notify("Reset", "All flags cleared.", 3)
+end)
 
-CentralUI:CreateSection(VisualsTab, "Dynamic Tabs")
+-- ==========================================
+-- ABOUT TAB: Info & Dynamic Tabs
+-- ==========================================
+CentralUI:CreateSection(AboutTab, "Library Info")
 
--- Button to add a new tab dynamically
-CentralUI:CreateButton(VisualsTab, "Add 'Extra' Tab", function()
-    local extraTab = CentralUI:CreateTab("Extra", "rbxassetid://10723415903")
-    CentralUI:CreateSection(extraTab, "New Content")
-    CentralUI:CreateButton(extraTab, "Hello from Extra!", function()
-        CentralUI:Notify("Extra", "This tab was created at runtime!", 3)
+CentralUI:CreateParagraph(AboutTab, "Version", "Central UI v5.2.0")
+CentralUI:CreateParagraph(AboutTab, "Author", "WareSploit")
+CentralUI:CreateLabel(AboutTab, "License: MIT")
+
+-- Dynamic Tab Management Demo
+CentralUI:CreateSection(AboutTab, "Dynamic Features")
+
+CentralUI:CreateButton(AboutTab, "Add 'Secret' Tab", function()
+    -- Creating tab without icon
+    local secretTab = CentralUI:CreateTab("Secret") 
+    CentralUI:CreateSection(secretTab, "Hidden Content")
+    CentralUI:CreateButton(secretTab, "Click Me!", function()
+        CentralUI:Notify("Secret", "You found the secret tab!", 3)
     end)
     CentralUI:Notify("System", "New tab added!", 3)
 end)
 
--- Update Tab Demo
-local demoTab = CentralUI:CreateTab("Demo", "rbxassetid://10723407389")
+-- ==========================================
+-- NOTIFICATIONS DEMO
+-- ==========================================
 task.wait(2)
-demoTab:SetName("Updated Demo")
-demoTab:SetIcon("rbxassetid://10734950309")
-CentralUI:Notify("System", "Tab 'Demo' updated name and icon!", 3)
-
-
--- ==========================================
--- NOTIFICATIONS & WATERMARK
--- ==========================================
-
-task.wait(1)
-CentralUI:Notify("Welcome", "Central UI v4.2 Loaded Successfully!", 5)
-
-task.wait(2)
--- Show watermark with Executor detection
-CentralUI:CreateWatermark() 
--- Result: "Central UI v4.2.0 | [YourExecutor]"
-
-task.wait(2)
-CentralUI:Notify("Tip", "Press RightCtrl to toggle UI visibility", 4)
-
--- ==========================================
--- TESTING FLAGS & DYNAMIC VALUES
--- ==========================================
+CentralUI:Notify("Welcome", "Central UI Loaded Successfully!", 5)
 
 task.wait(3)
-print("--- Testing Dynamic Updates ---")
+CentralUI:Notify("Tip", "Press RightCtrl to hide/show the UI", 4)
 
--- Change slider value via code
-speedSlider.SetValue(50)
-print("Speed set to 50")
-
--- Toggle feature off
-toggleFeature.SetValue(false)
-print("Feature toggled off")
-
--- Change dropdown
-modeDropdown.SetValue("Rage")
-print("Mode set to Rage")
-
--- Change input
-nicknameInput.SetValue("ProPlayer123")
-print("Nickname set")
-
--- Change keybind
-aimKey.SetValue("Q")
-print("Keybind set to Q")
-
--- Change color
-espColor.SetValue(Color3.fromRGB(0, 255, 0))
-print("Color set to Green")
-
-print("--- All tests complete! ---")
+task.wait(3)
+CentralUI:Notify("Config", "Try saving a config in the Settings tab!", 4)
