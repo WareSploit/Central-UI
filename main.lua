@@ -69,12 +69,10 @@ local function CreateInstance(class, parent, properties)
     return instance
 end
 
--- Setup Config Folder
 if makefolder then
     pcall(makefolder, CONFIG.ConfigFolder)
 end
 
--- ScreenGui setup
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CentralUI"
 ScreenGui.IgnoreGuiInset = true
@@ -126,7 +124,6 @@ CreateInstance("TextLabel", WelcomerFrame, {
     TextColor3 = CONFIG.Colors.Subtext, BackgroundTransparency = 1, Size = UDim2.new(0, 80, 0, 18), Text = CONFIG.Version, Name = "Version", Position = UDim2.new(1, -90, 1, -28)
 })
 
--- Main Window
 local MainWindow = CreateInstance("Frame", ScreenGui, {
     Visible = false, BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Background,
     ClipsDescendants = true, Size = UDim2.new(0, 540, 0, 380), Position = UDim2.new(0.5, -270, 0.5, -190), Name = "MainWindow"
@@ -169,7 +166,6 @@ CreateInstance("ImageLabel", Topbar, {
     Size = UDim2.new(0, 62, 0, 55), BackgroundTransparency = 1, Name = "MAIN-SVG", Position = UDim2.new(0, 0, -0.1087, 0)
 })
 
--- FIX: Added ZIndex = 10 to ensure buttons are on top and clickable
 local MinBtn = CreateInstance("TextButton", Topbar, {
     BorderSizePixel = 0, TextSize = 14, AutoButtonColor = false, TextColor3 = CONFIG.Colors.Subtext,
     BackgroundColor3 = CONFIG.Colors.Element, FontFace = CONFIG.Fonts.Bold,
@@ -178,7 +174,6 @@ local MinBtn = CreateInstance("TextButton", Topbar, {
 CreateInstance("UICorner", MinBtn, {CornerRadius = UDim.new(0, 4)})
 CreateInstance("UIStroke", MinBtn, {Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
 
--- FIX: Added ZIndex = 10
 local CloseBtn = CreateInstance("TextButton", Topbar, {
     BorderSizePixel = 0, TextSize = 12, AutoButtonColor = false, TextColor3 = CONFIG.Colors.Subtext,
     BackgroundColor3 = CONFIG.Colors.Element, FontFace = CONFIG.Fonts.Bold,
@@ -205,18 +200,23 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- Minimize & Close Logic
+-- ==========================================
+-- FIXED MINIMIZE & CLOSE LOGIC
+-- ==========================================
 local isMinimized = false
 MinBtn.MouseButton1Click:Connect(function()
-    dragging = false -- FIX: Stop dragging on click to prevent conflict
+    dragging = false -- Останавливаем Drag, чтобы он не мешал
     isMinimized = not isMinimized
     if isMinimized then
-        TabHolder.Visible = false; ContentHolder.Visible = false
-        TweenProperty(MainWindow, "Size", UDim2.new(0, 540, 0, 46), 0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out):Play()
+        TabHolder.Visible = false
+        ContentHolder.Visible = false
+        -- Прямой вызов TweenService, чтобы на 100% сработало
+        TweenService:Create(MainWindow, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, 540, 0, 46)}):Play()
         MinBtn.Text = "+"
     else
-        TabHolder.Visible = true; ContentHolder.Visible = true
-        TweenProperty(MainWindow, "Size", UDim2.new(0, 540, 0, 380), 0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out):Play()
+        TabHolder.Visible = true
+        ContentHolder.Visible = true
+        TweenService:Create(MainWindow, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, 540, 0, 380)}):Play()
         MinBtn.Text = "—"
     end
 end)
@@ -414,7 +414,6 @@ function CentralUI:CreateSlider(tab, text, min, max, default, callback, flag)
     return obj
 end
 
--- DROPDOWN
 function CentralUI:CreateDropdown(tab, text, options, default, callback, flag)
     local selected = default or options[1]
     if flag then CentralUI.Flags[flag] = selected end
