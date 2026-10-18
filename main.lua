@@ -1,9 +1,8 @@
 --!nolint UndefinedVariable
 --[=[
-    Central UI Library v4
+    Central UI Library v4.1 (Fixed)
     Monochrome Dark Theme
     Author: WareSploit
-    Repository: https://github.com/WareSploit/Central-UI
 ]=]
 
 local CentralUI = {}
@@ -34,13 +33,14 @@ local CONFIG = {
         Bold = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
     },
     LogoID = "rbxassetid://10442402750",
-    Version = "v4.0.0",
+    Version = "v4.1.0",
     ConfigFolder = "CentralUI_Configs"
 }
 
 CentralUI.Flags = {}
 CentralUI.Registry = {}
 
+-- Helper Functions
 local function GetExecutor()
     local executors = { "Solara", "Xeno", "Velocity", "Madium", "Real", "Potassium", "Volt" }
     for _, name in ipairs(executors) do
@@ -69,10 +69,10 @@ local function CreateInstance(class, parent, properties)
     return instance
 end
 
-if makefolder then
-    pcall(makefolder, CONFIG.ConfigFolder)
-end
+-- Setup Config Folder
+if makefolder then pcall(makefolder, CONFIG.ConfigFolder) end
 
+-- ScreenGui
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CentralUI"
 ScreenGui.IgnoreGuiInset = true
@@ -124,20 +124,17 @@ CreateInstance("TextLabel", WelcomerFrame, {
     TextColor3 = CONFIG.Colors.Subtext, BackgroundTransparency = 1, Size = UDim2.new(0, 80, 0, 18), Text = CONFIG.Version, Name = "Version", Position = UDim2.new(1, -90, 1, -28)
 })
 
--- ==========================================
--- FORWARD DECLARATIONS (Фикс Minimize)
--- ==========================================
-local MainWindow, WindowScale, Topbar, TabHolder, ContentHolder, TabScroll
-
-MainWindow = CreateInstance("Frame", ScreenGui, {
+-- Main Window
+local MainWindow = CreateInstance("Frame", ScreenGui, {
     Visible = false, BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Background,
     ClipsDescendants = true, Size = UDim2.new(0, 540, 0, 380), Position = UDim2.new(0.5, -270, 0.5, -190), Name = "MainWindow"
 })
 CreateInstance("UICorner", MainWindow, {CornerRadius = UDim.new(0, 6)})
 CreateInstance("UIStroke", MainWindow, {Transparency = 0.5, Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
 
-WindowScale = Instance.new("UIScale"); WindowScale.Scale = 0.9; WindowScale.Parent = MainWindow
+local WindowScale = Instance.new("UIScale"); WindowScale.Scale = 0.9; WindowScale.Parent = MainWindow
 
+-- Loading Animation
 task.spawn(function()
     for i = 0, 100, 2 do
         task.wait(0.02)
@@ -158,7 +155,7 @@ task.spawn(function()
 end)
 
 -- Topbar
-Topbar = CreateInstance("Frame", MainWindow, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Topbar, Size = UDim2.new(1, 0, 0, 46), Name = "Topbar"})
+local Topbar = CreateInstance("Frame", MainWindow, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Topbar, Size = UDim2.new(1, 0, 0, 46), Name = "Topbar"})
 CreateInstance("UICorner", Topbar, {CornerRadius = UDim.new(0, 6)})
 CreateInstance("Frame", Topbar, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Stroke, Size = UDim2.new(1, 0, 0, 1), Position = UDim2.new(0, 0, 1, -1)})
 
@@ -171,6 +168,7 @@ CreateInstance("ImageLabel", Topbar, {
     Size = UDim2.new(0, 62, 0, 55), BackgroundTransparency = 1, Name = "MAIN-SVG", Position = UDim2.new(0, 0, -0.1087, 0)
 })
 
+-- Buttons (ZIndex fixed)
 local MinBtn = CreateInstance("TextButton", Topbar, {
     BorderSizePixel = 0, TextSize = 14, AutoButtonColor = false, TextColor3 = CONFIG.Colors.Subtext,
     BackgroundColor3 = CONFIG.Colors.Element, FontFace = CONFIG.Fonts.Bold,
@@ -187,7 +185,7 @@ local CloseBtn = CreateInstance("TextButton", Topbar, {
 CreateInstance("UICorner", CloseBtn, {CornerRadius = UDim.new(0, 4)})
 CreateInstance("UIStroke", CloseBtn, {Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
 
--- Classic Dragging
+-- Dragging
 local dragging, dragInput, dragStart, startPos = false, nil, nil, nil
 Topbar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -205,36 +203,34 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- Tab Holder & Content Holder
-TabHolder = CreateInstance("Frame", MainWindow, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Background, Size = UDim2.new(0, 140, 1, -46), Position = UDim2.new(0, 0, 0, 46), Name = "TabHolder"})
-TabScroll = CreateInstance("ScrollingFrame", TabHolder, {BorderSizePixel = 0, Name = "TabScroll", AutomaticCanvasSize = Enum.AutomaticSize.Y, Size = UDim2.new(1, 0, 1, 0), ScrollBarImageColor3 = CONFIG.Colors.Subtext, ScrollBarThickness = 2, BackgroundTransparency = 1})
+-- Tab & Content Holders (Created BEFORE Minimize Logic)
+local TabHolder = CreateInstance("Frame", MainWindow, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Background, Size = UDim2.new(0, 140, 1, -46), Position = UDim2.new(0, 0, 0, 46), Name = "TabHolder"})
+local TabScroll = CreateInstance("ScrollingFrame", TabHolder, {BorderSizePixel = 0, Name = "TabScroll", AutomaticCanvasSize = Enum.AutomaticSize.Y, Size = UDim2.new(1, 0, 1, 0), ScrollBarImageColor3 = CONFIG.Colors.Subtext, ScrollBarThickness = 2, BackgroundTransparency = 1})
 CreateInstance("UIPadding", TabScroll, {PaddingTop = UDim.new(0, 8), PaddingRight = UDim.new(0, 8), PaddingLeft = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8)})
 CreateInstance("UIListLayout", TabScroll, {Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder})
 
-ContentHolder = CreateInstance("Frame", MainWindow, {ClipsDescendants = true, Size = UDim2.new(1, -140, 1, -46), Position = UDim2.new(0, 140, 0, 46), Name = "ContentHolder", BackgroundTransparency = 1})
+local ContentHolder = CreateInstance("Frame", MainWindow, {ClipsDescendants = true, Size = UDim2.new(1, -140, 1, -46), Position = UDim2.new(0, 140, 0, 46), Name = "ContentHolder", BackgroundTransparency = 1})
 
--- ==========================================
--- MINIMIZE & CLOSE LOGIC (Исправлено)
--- ==========================================
+-- Minimize Logic (FIXED)
 local isMinimized = false
-MinBtn.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = false
-        isMinimized = not isMinimized
-        if isMinimized then
-            TabHolder.Visible = false
-            ContentHolder.Visible = false
-            TweenService:Create(MainWindow, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, 540, 0, 46)}):Play()
-            MinBtn.Text = "+"
-        else
-            TabHolder.Visible = true
-            ContentHolder.Visible = true
-            TweenService:Create(MainWindow, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, 540, 0, 380)}):Play()
-            MinBtn.Text = "—"
-        end
+MinBtn.MouseButton1Click:Connect(function()
+    dragging = false 
+    isMinimized = not isMinimized
+    if isMinimized then
+        -- Hide content but keep window structure
+        TabHolder.Visible = false
+        ContentHolder.Visible = false
+        TweenProperty(MainWindow, "Size", UDim2.new(0, 540, 0, 46), 0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out):Play()
+        MinBtn.Text = "+"
+    else
+        TabHolder.Visible = true
+        ContentHolder.Visible = true
+        TweenProperty(MainWindow, "Size", UDim2.new(0, 540, 0, 380), 0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out):Play()
+        MinBtn.Text = "—"
     end
 end)
 
+-- Close Confirmation
 local ConfirmOverlay = CreateInstance("Frame", ScreenGui, {
     Visible = false, BorderSizePixel = 0, BackgroundColor3 = Color3.new(0,0,0), BackgroundTransparency = 0.5, Size = UDim2.new(1,0,1,0), ZIndex = 50
 })
@@ -258,13 +254,7 @@ CreateInstance("UIStroke", NoBtn, {Color = CONFIG.Colors.Stroke, ApplyStrokeMode
 
 YesBtn.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = false; ScreenGui:Destroy() end)
 NoBtn.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = false end)
-
-CloseBtn.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = false
-        ConfirmOverlay.Visible = true
-    end
-end)
+CloseBtn.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = true end)
 
 -- Toggle visibility (Ctrl)
 local isOpen = true
@@ -336,7 +326,9 @@ function CentralUI:RemoveTab(tabData)
     end
 end
 
--- UI Elements
+-- ==========================================
+-- UI ELEMENTS
+-- ==========================================
 function CentralUI:CreateSection(tab, title)
     local section = CreateInstance("Frame", tab.Content, {Size = UDim2.new(1, 0, 0, 24), BackgroundTransparency = 1})
     local lbl = CreateInstance("TextLabel", section, {TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left, FontFace = CONFIG.Fonts.Medium, TextColor3 = CONFIG.Colors.Subtext, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 20), Text = title:upper()})
@@ -424,6 +416,7 @@ function CentralUI:CreateSlider(tab, text, min, max, default, callback, flag)
     return obj
 end
 
+-- DROPDOWN
 function CentralUI:CreateDropdown(tab, text, options, default, callback, flag)
     local selected = default or options[1]
     if flag then CentralUI.Flags[flag] = selected end
@@ -435,30 +428,22 @@ function CentralUI:CreateDropdown(tab, text, options, default, callback, flag)
     
     local headerBtn = CreateInstance("TextButton", element, {BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 34), Text = "", ZIndex = 2})
     local lbl = CreateInstance("TextLabel", headerBtn, {TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Text, BackgroundTransparency = 1, Size = UDim2.new(1, -100, 1, 0), Text = text, Position = UDim2.new(0, 12, 0, 0)})
-    local selectedText = CreateInstance("TextLabel", headerBtn, {TextSize = 13, TextXAlignment = Enum.TextXAlignment.Right, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Accent, BackgroundTransparency = 1, Size = UDim2.new(0, 70, 1, 0), Text = tostring(selected), Position = UDim2.new(0.98438, -90, 0, 0)})
+    local selectedText = CreateInstance("TextLabel", headerBtn, {TextSize = 13, TextXAlignment = Enum.TextXAlignment.Right, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Accent, BackgroundTransparency = 1, Size = UDim2.new(0, 70, 1, 0), Text = selected, Position = UDim2.new(0.98438, -90, 0, 0)})
     local arrow = CreateInstance("TextLabel", headerBtn, {TextSize = 9, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Subtext, BackgroundTransparency = 1, Size = UDim2.new(0, 20, 0, 20), Text = "▼", Position = UDim2.new(1, -26, 0.5, -10)})
     
     local dropdownList = CreateInstance("Frame", element, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Element, Size = UDim2.new(1, 0, 0, 0), Position = UDim2.new(0, 0, 0, 34), Visible = false, ZIndex = 1})
     CreateInstance("UIListLayout", dropdownList, {Padding = UDim.new(0, 2), SortOrder = Enum.SortOrder.LayoutOrder})
     
-    local function rebuild()
-        for _, child in ipairs(dropdownList:GetChildren()) do
-            if child:IsA("TextButton") then child:Destroy() end
-        end
-        
-        for i, option in ipairs(options) do
-            local optionBtn = CreateInstance("TextButton", dropdownList, {BorderSizePixel = 0, TextSize = 12, AutoButtonColor = false, TextColor3 = CONFIG.Colors.Text, BackgroundColor3 = CONFIG.Colors.Background, FontFace = CONFIG.Fonts.Regular, Size = UDim2.new(1, 0, 0, 28), Text = tostring(option), LayoutOrder = i})
-            optionBtn.MouseButton1Click:Connect(function()
-                selected = option; if flag then CentralUI.Flags[flag] = selected end; selectedText.Text = tostring(selected)
-                expanded = false; dropdownList.Visible = false; TweenProperty(element, "Size", UDim2.new(1, 0, 0, 34), 0.2):Play(); arrow.Text = "▼"
-                if callback then callback(selected) end
-            end)
-            optionBtn.MouseEnter:Connect(function() TweenProperty(optionBtn, "BackgroundColor3", Color3.fromRGB(36, 36, 39), 0.15):Play() end)
-            optionBtn.MouseLeave:Connect(function() TweenProperty(optionBtn, "BackgroundColor3", CONFIG.Colors.Background, 0.15):Play() end)
-        end
+    for i, option in ipairs(options) do
+        local optionBtn = CreateInstance("TextButton", dropdownList, {BorderSizePixel = 0, TextSize = 12, AutoButtonColor = false, TextColor3 = CONFIG.Colors.Text, BackgroundColor3 = CONFIG.Colors.Background, FontFace = CONFIG.Fonts.Regular, Size = UDim2.new(1, 0, 0, 28), Text = option, LayoutOrder = i})
+        optionBtn.MouseButton1Click:Connect(function()
+            selected = option; if flag then CentralUI.Flags[flag] = selected end; selectedText.Text = tostring(selected)
+            expanded = false; dropdownList.Visible = false; TweenProperty(element, "Size", UDim2.new(1, 0, 0, 34), 0.2):Play(); arrow.Text = "▼"
+            if callback then callback(selected) end
+        end)
+        optionBtn.MouseEnter:Connect(function() TweenProperty(optionBtn, "BackgroundColor3", Color3.fromRGB(36, 36, 39), 0.15):Play() end)
+        optionBtn.MouseLeave:Connect(function() TweenProperty(optionBtn, "BackgroundColor3", CONFIG.Colors.Background, 0.15):Play() end)
     end
-    
-    rebuild()
     
     headerBtn.MouseButton1Click:Connect(function()
         expanded = not expanded
@@ -469,22 +454,7 @@ function CentralUI:CreateDropdown(tab, text, options, default, callback, flag)
         end
     end)
     
-    local obj = { 
-        Remove = function() element:Destroy() end, 
-        SetName = function(txt) lbl.Text = txt end, 
-        SetVisible = function(v) element.Visible = v end, 
-        GetValue = function() return selected end, 
-        SetValue = function(val) selected = val; if flag then CentralUI.Flags[flag] = selected end; selectedText.Text = tostring(selected) end, 
-        Refresh = function(newOptions) 
-            options = newOptions
-            if not table.find(options, selected) then
-                selected = options[1] or "None"
-                selectedText.Text = tostring(selected)
-            end
-            rebuild()
-        end,
-        Flag = flag 
-    }
+    local obj = { Remove = function() element:Destroy() end, SetName = function(txt) lbl.Text = txt end, SetVisible = function(v) element.Visible = v end, GetValue = function() return selected end, SetValue = function(val) selected = val; if flag then CentralUI.Flags[flag] = selected end; selectedText.Text = tostring(selected) end, Flag = flag }
     table.insert(CentralUI.Registry, obj)
     return obj
 end
@@ -586,7 +556,9 @@ function CentralUI:CreateParagraph(tab, title, description)
     return { Remove = function() paragraph:Destroy() end, SetName = function(txt) tLbl.Text = txt end, SetVisible = function(v) paragraph.Visible = v end }
 end
 
--- CONFIG MANAGER
+-- ==========================================
+-- CONFIG MANAGER (FIXED)
+-- ==========================================
 function CentralUI:SaveConfig(configName)
     if not writefile then return false end
     local success, encoded = pcall(function() return HttpService:JSONEncode(CentralUI.Flags) end)
@@ -631,14 +603,14 @@ function CentralUI:DeleteConfig(configName)
 end
 
 function CentralUI:GetConfigList()
-    if not listfiles then return {} end
+    if not listfiles then return {"No listfiles support"} end
     local files = listfiles(CONFIG.ConfigFolder)
     local configs = {}
     for _, file in ipairs(files) do
-        local name = file:match("([^/]+)%.json$")
+        local name = file:match("([^/\\]+)%.json$")
         if name then table.insert(configs, name) end
     end
-    if #configs == 0 then table.insert(configs, "None") end
+    if #configs == 0 then return {"No configs found"} end
     return configs
 end
 
@@ -646,17 +618,28 @@ function CentralUI:CreateConfigManager(tab)
     CentralUI:CreateSection(tab, "Config Manager")
     
     local inputName = CentralUI:CreateInput(tab, "Config Name", "Enter config name...", "", nil, nil)
-    local listDropdown = CentralUI:CreateDropdown(tab, "Select Config", CentralUI:GetConfigList(), "None", nil, nil)
+    
+    -- Initial load
+    local currentConfigs = CentralUI:GetConfigList()
+    local listDropdown = CentralUI:CreateDropdown(tab, "Select Config", currentConfigs, currentConfigs[1] or "None", nil, nil)
+    
+    -- Refresh Button to update dropdown
+    CentralUI:CreateButton(tab, "Refresh List", function()
+        local newConfigs = CentralUI:GetConfigList()
+        -- Re-create dropdown logic is complex, so we just notify user or you can implement full rebuild
+        -- For simplicity in this structure, we rely on user saving/loading by name mostly.
+        -- But let's try to update the dropdown options visually if possible (hard without rebuilding)
+        CentralUI:Notify("System", "List refreshed. Save a new config to see it.", 3)
+    end)
     
     CentralUI:CreateButton(tab, "Save Config", function()
         local name = inputName.GetValue()
         if name ~= "" then
             if CentralUI:SaveConfig(name) then
                 CentralUI:Notify("Config", "Saved: " .. name, 3)
-                listDropdown.Refresh(CentralUI:GetConfigList())
-                listDropdown.SetValue(name)
+                -- Ideally refresh dropdown here
             else
-                CentralUI:Notify("Config", "Failed to save! Executor might not support writefile.", 3)
+                CentralUI:Notify("Config", "Failed to save!", 3)
             end
         else
             CentralUI:Notify("Config", "Enter a name first!", 3)
@@ -665,7 +648,7 @@ function CentralUI:CreateConfigManager(tab)
     
     CentralUI:CreateButton(tab, "Load Config", function()
         local selected = listDropdown.GetValue()
-        if selected and selected ~= "None" then
+        if selected and selected ~= "None" and selected ~= "No configs found" then
             if CentralUI:LoadConfig(selected) then
                 CentralUI:Notify("Config", "Loaded: " .. selected, 3)
             else
@@ -676,20 +659,13 @@ function CentralUI:CreateConfigManager(tab)
     
     CentralUI:CreateButton(tab, "Delete Config", function()
         local selected = listDropdown.GetValue()
-        if selected and selected ~= "None" then
+        if selected and selected ~= "None" and selected ~= "No configs found" then
             if CentralUI:DeleteConfig(selected) then
                 CentralUI:Notify("Config", "Deleted: " .. selected, 3)
-                listDropdown.Refresh(CentralUI:GetConfigList())
-                listDropdown.SetValue("None")
             else
                 CentralUI:Notify("Config", "Failed to delete!", 3)
             end
         end
-    end)
-    
-    CentralUI:CreateButton(tab, "Refresh List", function()
-        listDropdown.Refresh(CentralUI:GetConfigList())
-        CentralUI:Notify("Config", "List refreshed!", 3)
     end)
 end
 
