@@ -201,23 +201,25 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 -- ==========================================
--- FIXED MINIMIZE & CLOSE LOGIC
+-- FIXED MINIMIZE LOGIC (Using InputBegan instead of MouseButton1Click)
 -- ==========================================
 local isMinimized = false
-MinBtn.MouseButton1Click:Connect(function()
-    dragging = false -- Останавливаем Drag, чтобы он не мешал
-    isMinimized = not isMinimized
-    if isMinimized then
-        TabHolder.Visible = false
-        ContentHolder.Visible = false
-        -- Прямой вызов TweenService, чтобы на 100% сработало
-        TweenService:Create(MainWindow, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, 540, 0, 46)}):Play()
-        MinBtn.Text = "+"
-    else
-        TabHolder.Visible = true
-        ContentHolder.Visible = true
-        TweenService:Create(MainWindow, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, 540, 0, 380)}):Play()
-        MinBtn.Text = "—"
+MinBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false -- Принудительно отменяем Drag
+        isMinimized = not isMinimized
+        
+        if isMinimized then
+            TabHolder.Visible = false
+            ContentHolder.Visible = false
+            TweenService:Create(MainWindow, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, 540, 0, 46)}):Play()
+            MinBtn.Text = "+"
+        else
+            TabHolder.Visible = true
+            ContentHolder.Visible = true
+            TweenService:Create(MainWindow, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, 540, 0, 380)}):Play()
+            MinBtn.Text = "—"
+        end
     end
 end)
 
@@ -244,7 +246,14 @@ CreateInstance("UIStroke", NoBtn, {Color = CONFIG.Colors.Stroke, ApplyStrokeMode
 
 YesBtn.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = false; ScreenGui:Destroy() end)
 NoBtn.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = false end)
-CloseBtn.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = true end)
+
+-- Also switch CloseBtn to InputBegan to prevent drag from cancelling the click
+CloseBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+        ConfirmOverlay.Visible = true
+    end
+end)
 
 -- Toggle visibility (Ctrl)
 local isOpen = true
@@ -324,9 +333,7 @@ function CentralUI:RemoveTab(tabData)
     end
 end
 
--- ==========================================
--- UI ELEMENTS
--- ==========================================
+-- UI Elements
 function CentralUI:CreateSection(tab, title)
     local section = CreateInstance("Frame", tab.Content, {Size = UDim2.new(1, 0, 0, 24), BackgroundTransparency = 1})
     local lbl = CreateInstance("TextLabel", section, {TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left, FontFace = CONFIG.Fonts.Medium, TextColor3 = CONFIG.Colors.Subtext, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 20), Text = title:upper()})
@@ -553,9 +560,7 @@ function CentralUI:CreateParagraph(tab, title, description)
     return { Remove = function() paragraph:Destroy() end, SetName = function(txt) tLbl.Text = txt end, SetVisible = function(v) paragraph.Visible = v end }
 end
 
--- ==========================================
 -- CONFIG MANAGER
--- ==========================================
 function CentralUI:SaveConfig(configName)
     if not writefile then return false end
     local success, encoded = pcall(function() return HttpService:JSONEncode(CentralUI.Flags) end)
