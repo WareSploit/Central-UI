@@ -73,14 +73,14 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = PlayerGui
 
 -- ==========================================
--- WELCOME FRAME (ИДЕАЛЬНО ПО ЦЕНТРУ)
+-- WELCOME FRAME (ЦЕНТР)
 -- ==========================================
 local WelcomerFrame = CreateInstance("Frame", ScreenGui, {
     BorderSizePixel = 0, 
     BackgroundColor3 = Color3.fromRGB(11, 11, 13), 
     Size = UDim2.new(0, 450, 0, 220), 
     Position = UDim2.new(0.5, 0, 0.5, 0),
-    AnchorPoint = Vector2.new(0.5, 0.5), -- Жесткий центр
+    AnchorPoint = Vector2.new(0.5, 0.5),
     Name = "WelcomerFrame"
 })
 CreateInstance("UICorner", WelcomerFrame, {CornerRadius = UDim.new(0, 6)})
@@ -159,7 +159,7 @@ CreateInstance("UIListLayout", TabScroll, {Padding = UDim.new(0, 4), SortOrder =
 local ContentHolder = CreateInstance("Frame", MainWindow, {ClipsDescendants = true, Size = UDim2.new(1, -140, 1, -46), Position = UDim2.new(0, 140, 0, 46), Name = "ContentHolder", BackgroundTransparency = 1})
 
 -- ==========================================
--- 100% FIXED DRAGGING LOGIC (ABSOLUTE PIXELS)
+-- CLASSIC DRAGGING LOGIC (ИСПРАВЛЕНО)
 -- ==========================================
 local dragging = false
 local dragStart, startPos = nil, nil
@@ -169,11 +169,9 @@ Topbar.InputBegan:Connect(function(input)
         dragging = true
         dragStart = input.Position
         
-        -- Конвертируем текущую позицию (Scale + Offset) в чистые пиксели (Offset)
+        -- Конвертируем Scale+Offset в чистый Offset, чтобы окно не прыгало
         local absPos = MainWindow.AbsolutePosition
         startPos = UDim2.new(0, absPos.X, 0, absPos.Y)
-        
-        -- Сбрасываем Scale, чтобы окно не прыгало в 0,0
         MainWindow.Position = startPos
         
         input.Changed:Connect(function()
@@ -328,17 +326,13 @@ function CentralUI:RemoveTab(tabData)
 end
 
 -- ==========================================
--- UI ELEMENTS (С МЕТОДАМИ УПРАВЛЕНИЯ)
+-- UI ELEMENTS (Скрытый API для управления)
 -- ==========================================
 function CentralUI:CreateSection(tab, title)
     local section = CreateInstance("Frame", tab.Content, {Size = UDim2.new(1, 0, 0, 24), BackgroundTransparency = 1})
     local lbl = CreateInstance("TextLabel", section, {TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left, FontFace = CONFIG.Fonts.Medium, TextColor3 = CONFIG.Colors.Subtext, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 20), Text = title:upper()})
     CreateInstance("Frame", section, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Line, Size = UDim2.new(1, 0, 0, 1), Position = UDim2.new(0, 0, 0, 20)})
-    return {
-        Remove = function() section:Destroy() end,
-        SetName = function(txt) lbl.Text = txt:upper() end,
-        SetVisible = function(v) section.Visible = v end
-    }
+    return { Remove = function() section:Destroy() end, SetName = function(txt) lbl.Text = txt:upper() end, SetVisible = function(v) section.Visible = v end }
 end
 
 function CentralUI:CreateButton(tab, text, callback)
@@ -348,15 +342,8 @@ function CentralUI:CreateButton(tab, text, callback)
     local btn = CreateInstance("TextButton", element, {TextSize = 13, AutoButtonColor = false, TextColor3 = CONFIG.Colors.Text, FontFace = CONFIG.Fonts.Regular, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Text = text})
     btn.MouseEnter:Connect(function() TweenProperty(element, "BackgroundColor3", Color3.fromRGB(36, 36, 39), 0.15):Play() end)
     btn.MouseLeave:Connect(function() TweenProperty(element, "BackgroundColor3", CONFIG.Colors.Element, 0.15):Play() end)
-    
     if callback then btn.MouseButton1Click:Connect(callback) end
-    
-    return {
-        Remove = function() element:Destroy() end,
-        SetName = function(txt) btn.Text = txt end,
-        SetVisible = function(v) element.Visible = v end,
-        AddCallback = function(newFunc) btn.MouseButton1Click:Connect(newFunc) end
-    }
+    return { Remove = function() element:Destroy() end, SetName = function(txt) btn.Text = txt end, SetVisible = function(v) element.Visible = v end, AddCallback = function(newFunc) btn.MouseButton1Click:Connect(newFunc) end }
 end
 
 function CentralUI:CreateToggle(tab, text, default, callback, flag)
@@ -389,14 +376,7 @@ function CentralUI:CreateToggle(tab, text, default, callback, flag)
         if not silent and callback then callback(enabled) end
     end
     element.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then updateToggle(false) end end)
-    
-    return {
-        Remove = function() element:Destroy() end,
-        SetName = function(txt) lbl.Text = txt end,
-        SetVisible = function(v) element.Visible = v end,
-        GetValue = function() return enabled end,
-        SetValue = function(val) if enabled ~= val then updateToggle(true) end end
-    }
+    return { Remove = function() element:Destroy() end, SetName = function(txt) lbl.Text = txt end, SetVisible = function(v) element.Visible = v end, GetValue = function() return enabled end, SetValue = function(val) if enabled ~= val then updateToggle(true) end end }
 end
 
 function CentralUI:CreateSlider(tab, text, min, max, default, callback, flag)
@@ -428,18 +408,7 @@ function CentralUI:CreateSlider(tab, text, min, max, default, callback, flag)
     sliderBg.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then updateSlider(input); dragging = true end end)
     UserInputService.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then updateSlider(input) end end)
     UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
-    
-    return {
-        Remove = function() element:Destroy() end,
-        SetName = function(txt) lbl.Text = txt end,
-        SetVisible = function(v) element.Visible = v end,
-        GetValue = function() return value end,
-        SetValue = function(val) 
-            value = math.clamp(val, min, max); if flag then CentralUI.Flags[flag] = value end; 
-            local percent = (value - min) / (max - min); sliderFill.Size = UDim2.new(percent, 0, 1, 0); sliderKnob.Position = UDim2.new(percent, -6, 0.5, -6); valueText.Text = tostring(value); 
-            if callback then callback(value) end 
-        end
-    }
+    return { Remove = function() element:Destroy() end, SetName = function(txt) lbl.Text = txt end, SetVisible = function(v) element.Visible = v end, GetValue = function() return value end, SetValue = function(val) value = math.clamp(val, min, max); if flag then CentralUI.Flags[flag] = value end; local percent = (value - min) / (max - min); sliderFill.Size = UDim2.new(percent, 0, 1, 0); sliderKnob.Position = UDim2.new(percent, -6, 0.5, -6); valueText.Text = tostring(value); if callback then callback(value) end end }
 end
 
 function CentralUI:CreateDropdown(tab, text, options, default, callback, flag)
@@ -477,14 +446,7 @@ function CentralUI:CreateDropdown(tab, text, options, default, callback, flag)
             TweenProperty(element, "Size", UDim2.new(1, 0, 0, 34), 0.2):Play(); dropdownList.Visible = false; arrow.Text = "▼"
         end
     end)
-    
-    return {
-        Remove = function() element:Destroy() end,
-        SetName = function(txt) lbl.Text = txt end,
-        SetVisible = function(v) element.Visible = v end,
-        GetValue = function() return selected end,
-        SetValue = function(val) selected = val; if flag then CentralUI.Flags[flag] = selected end; selectedText.Text = tostring(selected) end
-    }
+    return { Remove = function() element:Destroy() end, SetName = function(txt) lbl.Text = txt end, SetVisible = function(v) element.Visible = v end, GetValue = function() return selected end, SetValue = function(val) selected = val; if flag then CentralUI.Flags[flag] = selected end; selectedText.Text = tostring(selected) end }
 end
 
 function CentralUI:CreateInput(tab, text, placeholder, default, callback, flag)
@@ -498,14 +460,7 @@ function CentralUI:CreateInput(tab, text, placeholder, default, callback, flag)
     CreateInstance("UICorner", inputBox, {CornerRadius = UDim.new(0, 4)})
     CreateInstance("UIStroke", inputBox, {Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
     inputBox.FocusLost:Connect(function(enterPressed) value = inputBox.Text; if flag then CentralUI.Flags[flag] = value end; if callback then callback(value, enterPressed) end end)
-    
-    return {
-        Remove = function() element:Destroy() end,
-        SetName = function(txt) lbl.Text = txt end,
-        SetVisible = function(v) element.Visible = v end,
-        GetValue = function() return inputBox.Text end,
-        SetValue = function(val) inputBox.Text = val; value = val; if flag then CentralUI.Flags[flag] = value end end
-    }
+    return { Remove = function() element:Destroy() end, SetName = function(txt) lbl.Text = txt end, SetVisible = function(v) element.Visible = v end, GetValue = function() return inputBox.Text end, SetValue = function(val) inputBox.Text = val; value = val; if flag then CentralUI.Flags[flag] = value end end }
 end
 
 function CentralUI:CreateKeybind(tab, text, defaultKey, callback, flag)
@@ -530,13 +485,7 @@ function CentralUI:CreateKeybind(tab, text, defaultKey, callback, flag)
             end)
         end
     end)
-    return {
-        Remove = function() element:Destroy() end,
-        SetName = function(txt) lbl.Text = txt end,
-        SetVisible = function(v) element.Visible = v end,
-        GetValue = function() return currentKey end,
-        SetValue = function(val) currentKey = val; if flag then CentralUI.Flags[flag] = currentKey end; keyBtn.Text = currentKey end
-    }
+    return { Remove = function() element:Destroy() end, SetName = function(txt) lbl.Text = txt end, SetVisible = function(v) element.Visible = v end, GetValue = function() return currentKey end, SetValue = function(val) currentKey = val; if flag then CentralUI.Flags[flag] = currentKey end; keyBtn.Text = currentKey end }
 end
 
 function CentralUI:CreateColorPicker(tab, text, defaultColor, callback, flag)
@@ -573,34 +522,19 @@ function CentralUI:CreateColorPicker(tab, text, defaultColor, callback, flag)
     rBg.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then updateColor(math.floor(math.clamp((input.Position.X - rBg.AbsolutePosition.X) / rBg.AbsoluteSize.X, 0, 1) * 255), math.floor(color.G * 255), math.floor(color.B * 255)) end end)
     gBg.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then updateColor(math.floor(color.R * 255), math.floor(math.clamp((input.Position.X - gBg.AbsolutePosition.X) / gBg.AbsoluteSize.X, 0, 1) * 255), math.floor(color.B * 255)) end end)
     bBg.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then updateColor(math.floor(color.R * 255), math.floor(color.G * 255), math.floor(math.clamp((input.Position.X - bBg.AbsolutePosition.X) / bBg.AbsoluteSize.X, 0, 1) * 255)) end end)
-    
-    return {
-        Remove = function() element:Destroy() end,
-        SetName = function(txt) lbl.Text = txt end,
-        SetVisible = function(v) element.Visible = v end,
-        GetValue = function() return color end,
-        SetValue = function(val) color = val; if flag then CentralUI.Flags[flag] = color end; updateColor(math.floor(color.R * 255), math.floor(color.G * 255), math.floor(color.B * 255)) end
-    }
+    return { Remove = function() element:Destroy() end, SetName = function(txt) lbl.Text = txt end, SetVisible = function(v) element.Visible = v end, GetValue = function() return color end, SetValue = function(val) color = val; if flag then CentralUI.Flags[flag] = color end; updateColor(math.floor(color.R * 255), math.floor(color.G * 255), math.floor(color.B * 255)) end }
 end
 
 function CentralUI:CreateLabel(tab, text)
     local l = CreateInstance("TextLabel", tab.Content, {TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Text, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 20), Text = text})
-    return {
-        Remove = function() l:Destroy() end,
-        SetName = function(txt) l.Text = txt end,
-        SetVisible = function(v) l.Visible = v end
-    }
+    return { Remove = function() l:Destroy() end, SetName = function(txt) l.Text = txt end, SetVisible = function(v) l.Visible = v end }
 end
 
 function CentralUI:CreateParagraph(tab, title, description)
     local paragraph = CreateInstance("Frame", tab.Content, {Size = UDim2.new(1, 0, 0, 40), BackgroundTransparency = 1})
     local tLbl = CreateInstance("TextLabel", paragraph, {TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, FontFace = CONFIG.Fonts.Medium, TextColor3 = CONFIG.Colors.Text, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 18), Text = title})
     local dLbl = CreateInstance("TextLabel", paragraph, {TextWrapped = true, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Subtext, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 18), Text = description, Position = UDim2.new(0, 0, 0, 20)})
-    return {
-        Remove = function() paragraph:Destroy() end,
-        SetName = function(txt) tLbl.Text = txt end,
-        SetVisible = function(v) paragraph.Visible = v end
-    }
+    return { Remove = function() paragraph:Destroy() end, SetName = function(txt) tLbl.Text = txt end, SetVisible = function(v) paragraph.Visible = v end }
 end
 
 -- Notification System
@@ -620,7 +554,7 @@ function CentralUI:Notify(title, text, duration)
     task.delay(duration, function() TweenProperty(notif, "Size", UDim2.new(0, 300, 0, 0), 0.3):Play(); TweenProperty(notifScale, "Scale", 0, 0.3):Play(); task.wait(0.3); notif:Destroy() end)
 end
 
--- Watermark (УМЕНЬШЕН)
+-- Watermark
 local Watermark = CreateInstance("Frame", ScreenGui, {Visible = false, BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Background, Size = UDim2.new(0, 200, 0, 24), Position = UDim2.new(1, -210, 0, 20), Name = "Watermark"})
 CreateInstance("UICorner", Watermark, {CornerRadius = UDim.new(0, 6)})
 CreateInstance("UIStroke", Watermark, {Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
