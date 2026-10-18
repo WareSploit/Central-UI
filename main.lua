@@ -75,16 +75,44 @@ end
 if makefolder then pcall(makefolder, CONFIG.ConfigFolder) end
 
 -- ==========================================
--- SCREEN GUI (FIXED FOR ALWAYS ON TOP)
+-- CONTAINER SELECTION (ESC-proof)
 -- ==========================================
+local _container
+do
+    -- 1) gethui() — лучший вариант: скрытый контейнер исполнителя
+    local ok, result = pcall(function() return gethui() end)
+    if ok and result then
+        _container = result
+    else
+        -- 2) CoreGui — иногда доступен напрямую
+        local ok2, result2 = pcall(function() return game:GetService("CoreGui") end)
+        if ok2 and result2 then
+            _container = result2
+        else
+            -- 3) PlayerGui — запасной вариант (ESC перекроет GUI)
+            _container = PlayerGui
+        end
+    end
+end
+
+-- Удаляем старый инстанс, если скрипт перезапускают
+pcall(function()
+    local old = _container:FindFirstChild("CentralUI")
+    if old and old ~= PlayerGui:FindFirstChild("CentralUI") then old:Destroy() end
+end)
+pcall(function()
+    local old = PlayerGui:FindFirstChild("CentralUI")
+    if old then old:Destroy() end
+end)
+
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CentralUI"
-ScreenGui.IgnoreGuiInset = true       -- FIX: Allows window to go under top bar
-ScreenGui.DisplayOrder = 999999       -- FIX: Highest possible order
-ScreenGui.ScreenInsets = Enum.ScreenInsets.None -- FIX: No safe area insets
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global -- FIX: Z-index works globally
-ScreenGui.ResetOnSpawn = false        -- FIX: Persists after death
-ScreenGui.Parent = PlayerGui
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.DisplayOrder = 999999999
+pcall(function() ScreenGui.ScreenInsets = Enum.ScreenInsets.None end)
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = _container
 
 -- ==========================================
 -- WELCOME FRAME
@@ -218,7 +246,7 @@ local ContentHolder = CreateInstance("Frame", MainWindow, {ClipsDescendants = tr
 -- Minimize Logic
 local isMinimized = false
 MinBtn.MouseButton1Click:Connect(function()
-    dragging = false 
+    dragging = false
     isMinimized = not isMinimized
     if isMinimized then
         TabHolder.Visible = false; ContentHolder.Visible = false
@@ -282,33 +310,33 @@ function CentralUI:CreateTab(name, imageId)
     })
     CreateInstance("UICorner", tabBtn, {CornerRadius = UDim.new(0, 6)})
     CreateInstance("UIStroke", tabBtn, {Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
-    
+
     local iconLabel = nil
     if imageId then
         iconLabel = CreateInstance("ImageLabel", tabBtn, {BorderSizePixel = 0, BackgroundColor3 = Color3.fromRGB(255, 255, 255), Image = imageId, Size = UDim2.new(0, 20, 0, 19), BackgroundTransparency = 1, Name = "USER-IMAGE", Position = UDim2.new(0.10484, 0, 0.1875, 0)})
     end
-    
+
     local contentFrame = CreateInstance("ScrollingFrame", ContentHolder, {
         Visible = false, BorderSizePixel = 0, CanvasSize = UDim2.new(0, 0, 0, 0), AutomaticCanvasSize = Enum.AutomaticSize.Y, Size = UDim2.new(1, 0, 1, 0), ScrollBarImageColor3 = CONFIG.Colors.Stroke, ScrollBarThickness = 3, BackgroundTransparency = 1, LayoutOrder = #Tabs + 1
     })
     CreateInstance("UIPadding", contentFrame, {PaddingTop = UDim.new(0, 8), PaddingRight = UDim.new(0, 8), PaddingLeft = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8)})
     CreateInstance("UIListLayout", contentFrame, {Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder})
-    
+
     tabBtn.MouseButton1Click:Connect(function()
         for _, tab in pairs(Tabs) do
             tab.Button.TextColor3 = CONFIG.Colors.Subtext; tab.Button.BackgroundColor3 = CONFIG.Colors.Background; tab.Content.Visible = false
         end
         tabBtn.TextColor3 = CONFIG.Colors.Text; tabBtn.BackgroundColor3 = CONFIG.Colors.Element; contentFrame.Visible = true; CurrentTab = tabData
     end)
-    
+
     tabData.Button = tabBtn; tabData.Content = contentFrame; tabData.Name = name
-    
+
     function tabData:SetIcon(newImageId)
         if iconLabel then iconLabel.Image = newImageId
         else iconLabel = CreateInstance("ImageLabel", tabBtn, {Image = newImageId, Size = UDim2.new(0, 20, 0, 19), BackgroundTransparency = 1, Name = "USER-IMAGE", Position = UDim2.new(0.10484, 0, 0.1875, 0)}) end
     end
     function tabData:SetName(newName) tabBtn.Text = newName; tabData.Name = newName end
-    
+
     table.insert(Tabs, tabData)
     if #Tabs == 1 then tabBtn.TextColor3 = CONFIG.Colors.Text; tabBtn.BackgroundColor3 = CONFIG.Colors.Element; contentFrame.Visible = true; CurrentTab = tabData end
     return tabData
@@ -360,7 +388,7 @@ function CentralUI:CreateToggle(tab, text, default, callback, flag)
     if not enabled then CreateInstance("UIStroke", toggleBg, {Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border}) end
     local toggleKnob = CreateInstance("Frame", toggleBg, {BorderSizePixel = 0, BackgroundColor3 = enabled and CONFIG.Colors.Background or CONFIG.Colors.Subtext, Size = UDim2.new(0, 14, 0, 14), Position = enabled and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)})
     CreateInstance("UICorner", toggleKnob, {CornerRadius = UDim.new(0, 7)})
-    
+
     local function updateToggle(silent)
         enabled = not enabled
         if flag then CentralUI.Flags[flag] = enabled end
@@ -378,7 +406,7 @@ function CentralUI:CreateToggle(tab, text, default, callback, flag)
         if not silent and callback then callback(enabled) end
     end
     element.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then updateToggle(false) end end)
-    
+
     local obj = { Remove = function() element:Destroy() end, SetName = function(txt) lbl.Text = txt end, SetVisible = function(v) element.Visible = v end, GetValue = function() return enabled end, SetValue = function(val) if enabled ~= val then updateToggle(true) end end, Flag = flag }
     table.insert(CentralUI.Registry, obj)
     return obj
@@ -399,7 +427,7 @@ function CentralUI:CreateSlider(tab, text, min, max, default, callback, flag)
     local sliderKnob = CreateInstance("Frame", sliderBg, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Background, Size = UDim2.new(0, 12, 0, 12), Position = UDim2.new((value - min) / (max - min), -6, 0.5, -6)})
     CreateInstance("UICorner", sliderKnob, {CornerRadius = UDim.new(0, 6)})
     CreateInstance("UIStroke", sliderKnob, {Thickness = 2, Color = CONFIG.Colors.Accent, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
-    
+
     local dragging = false
     local function updateSlider(input)
         local percent = math.clamp((input.Position.X - sliderBg.AbsolutePosition.X) / sliderBg.AbsoluteSize.X, 0, 1)
@@ -411,7 +439,7 @@ function CentralUI:CreateSlider(tab, text, min, max, default, callback, flag)
     sliderBg.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then updateSlider(input); dragging = true end end)
     UserInputService.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then updateSlider(input) end end)
     UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
-    
+
     local obj = { Remove = function() element:Destroy() end, SetName = function(txt) lbl.Text = txt end, SetVisible = function(v) element.Visible = v end, GetValue = function() return value end, SetValue = function(val) value = math.clamp(val, min, max); if flag then CentralUI.Flags[flag] = value end; local percent = (value - min) / (max - min); sliderFill.Size = UDim2.new(percent, 0, 1, 0); sliderKnob.Position = UDim2.new(percent, -6, 0.5, -6); valueText.Text = tostring(value); if callback then callback(value) end end, Flag = flag }
     table.insert(CentralUI.Registry, obj)
     return obj
@@ -421,19 +449,19 @@ function CentralUI:CreateDropdown(tab, text, options, default, callback, flag)
     local selected = default or options[1]
     if flag then CentralUI.Flags[flag] = selected end
     local expanded = false
-    
+
     local element = CreateInstance("Frame", tab.Content, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Element, Size = UDim2.new(1, 0, 0, 34), ClipsDescendants = true})
     CreateInstance("UICorner", element, {CornerRadius = UDim.new(0, 6)})
     CreateInstance("UIStroke", element, {Transparency = 0.6, Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
-    
+
     local headerBtn = CreateInstance("TextButton", element, {BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 34), Text = "", ZIndex = 2})
     local lbl = CreateInstance("TextLabel", headerBtn, {TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Text, BackgroundTransparency = 1, Size = UDim2.new(1, -100, 1, 0), Text = text, Position = UDim2.new(0, 12, 0, 0)})
     local selectedText = CreateInstance("TextLabel", headerBtn, {TextSize = 13, TextXAlignment = Enum.TextXAlignment.Right, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Accent, BackgroundTransparency = 1, Size = UDim2.new(0, 70, 1, 0), Text = selected, Position = UDim2.new(0.98438, -90, 0, 0)})
     local arrow = CreateInstance("TextLabel", headerBtn, {TextSize = 9, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Subtext, BackgroundTransparency = 1, Size = UDim2.new(0, 20, 0, 20), Text = "▼", Position = UDim2.new(1, -26, 0.5, -10)})
-    
+
     local dropdownList = CreateInstance("Frame", element, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Element, Size = UDim2.new(1, 0, 0, 0), Position = UDim2.new(0, 0, 0, 34), Visible = false, ZIndex = 1})
     CreateInstance("UIListLayout", dropdownList, {Padding = UDim.new(0, 2), SortOrder = Enum.SortOrder.LayoutOrder})
-    
+
     for i, option in ipairs(options) do
         local optionBtn = CreateInstance("TextButton", dropdownList, {BorderSizePixel = 0, TextSize = 12, AutoButtonColor = false, TextColor3 = CONFIG.Colors.Text, BackgroundColor3 = CONFIG.Colors.Background, FontFace = CONFIG.Fonts.Regular, Size = UDim2.new(1, 0, 0, 28), Text = option, LayoutOrder = i})
         optionBtn.MouseButton1Click:Connect(function()
@@ -444,7 +472,7 @@ function CentralUI:CreateDropdown(tab, text, options, default, callback, flag)
         optionBtn.MouseEnter:Connect(function() TweenProperty(optionBtn, "BackgroundColor3", Color3.fromRGB(36, 36, 39), 0.15):Play() end)
         optionBtn.MouseLeave:Connect(function() TweenProperty(optionBtn, "BackgroundColor3", CONFIG.Colors.Background, 0.15):Play() end)
     end
-    
+
     headerBtn.MouseButton1Click:Connect(function()
         expanded = not expanded
         if expanded then
@@ -453,7 +481,7 @@ function CentralUI:CreateDropdown(tab, text, options, default, callback, flag)
             TweenProperty(element, "Size", UDim2.new(1, 0, 0, 34), 0.2):Play(); dropdownList.Visible = false; arrow.Text = "▼"
         end
     end)
-    
+
     local obj = { Remove = function() element:Destroy() end, SetName = function(txt) lbl.Text = txt end, SetVisible = function(v) element.Visible = v end, GetValue = function() return selected end, SetValue = function(val) selected = val; if flag then CentralUI.Flags[flag] = selected end; selectedText.Text = tostring(selected) end, Flag = flag }
     table.insert(CentralUI.Registry, obj)
     return obj
@@ -470,7 +498,7 @@ function CentralUI:CreateInput(tab, text, placeholder, default, callback, flag)
     CreateInstance("UICorner", inputBox, {CornerRadius = UDim.new(0, 4)})
     CreateInstance("UIStroke", inputBox, {Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
     inputBox.FocusLost:Connect(function(enterPressed) value = inputBox.Text; if flag then CentralUI.Flags[flag] = value end; if callback then callback(value, enterPressed) end end)
-    
+
     local obj = { Remove = function() element:Destroy() end, SetName = function(txt) lbl.Text = txt end, SetVisible = function(v) element.Visible = v end, GetValue = function() return inputBox.Text end, SetValue = function(val) inputBox.Text = val; value = val; if flag then CentralUI.Flags[flag] = value end end, Flag = flag }
     table.insert(CentralUI.Registry, obj)
     return obj
@@ -498,7 +526,7 @@ function CentralUI:CreateKeybind(tab, text, defaultKey, callback, flag)
             end)
         end
     end)
-    
+
     local obj = { Remove = function() element:Destroy() end, SetName = function(txt) lbl.Text = txt end, SetVisible = function(v) element.Visible = v end, GetValue = function() return currentKey end, SetValue = function(val) currentKey = val; if flag then CentralUI.Flags[flag] = currentKey end; keyBtn.Text = currentKey end, Flag = flag }
     table.insert(CentralUI.Registry, obj)
     return obj
@@ -514,22 +542,22 @@ function CentralUI:CreateColorPicker(tab, text, defaultColor, callback, flag)
     local colorPreview = CreateInstance("Frame", element, {BorderSizePixel = 0, BackgroundColor3 = color, Size = UDim2.new(0, 26, 0, 26), Position = UDim2.new(1, -38, 0, 6)})
     CreateInstance("UICorner", colorPreview, {CornerRadius = UDim.new(0, 4)})
     CreateInstance("UIStroke", colorPreview, {Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
-    
+
     local rBg = CreateInstance("Frame", element, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Line, Size = UDim2.new(1, -24, 0, 6), Position = UDim2.new(0, 12, 0, 40)})
     CreateInstance("UICorner", rBg, {CornerRadius = UDim.new(0, 2)})
     local rFill = CreateInstance("Frame", rBg, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Accent, Size = UDim2.new(color.R, 0, 1, 0)})
     CreateInstance("UICorner", rFill, {CornerRadius = UDim.new(0, 2)})
-    
+
     local gBg = CreateInstance("Frame", element, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Line, Size = UDim2.new(1, -24, 0, 6), Position = UDim2.new(0, 12, 0, 52)})
     CreateInstance("UICorner", gBg, {CornerRadius = UDim.new(0, 2)})
     local gFill = CreateInstance("Frame", gBg, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Accent, Size = UDim2.new(color.G, 0, 1, 0)})
     CreateInstance("UICorner", gFill, {CornerRadius = UDim.new(0, 2)})
-    
+
     local bBg = CreateInstance("Frame", element, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Line, Size = UDim2.new(1, -24, 0, 6), Position = UDim2.new(0, 12, 0, 64)})
     CreateInstance("UICorner", bBg, {CornerRadius = UDim.new(0, 2)})
     local bFill = CreateInstance("Frame", bBg, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Accent, Size = UDim2.new(color.B, 0, 1, 0)})
     CreateInstance("UICorner", bFill, {CornerRadius = UDim.new(0, 2)})
-    
+
     local function updateColor(r, g, b)
         color = Color3.fromRGB(r, g, b); if flag then CentralUI.Flags[flag] = color end; colorPreview.BackgroundColor3 = color
         rFill.Size = UDim2.new(r / 255, 0, 1, 0); gFill.Size = UDim2.new(g / 255, 0, 1, 0); bFill.Size = UDim2.new(b / 255, 0, 1, 0)
@@ -538,7 +566,7 @@ function CentralUI:CreateColorPicker(tab, text, defaultColor, callback, flag)
     rBg.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then updateColor(math.floor(math.clamp((input.Position.X - rBg.AbsolutePosition.X) / rBg.AbsoluteSize.X, 0, 1) * 255), math.floor(color.G * 255), math.floor(color.B * 255)) end end)
     gBg.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then updateColor(math.floor(color.R * 255), math.floor(math.clamp((input.Position.X - gBg.AbsolutePosition.X) / gBg.AbsoluteSize.X, 0, 1) * 255), math.floor(color.B * 255)) end end)
     bBg.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then updateColor(math.floor(color.R * 255), math.floor(color.G * 255), math.floor(math.clamp((input.Position.X - bBg.AbsolutePosition.X) / bBg.AbsoluteSize.X, 0, 1) * 255)) end end)
-    
+
     local obj = { Remove = function() element:Destroy() end, SetName = function(txt) lbl.Text = txt end, SetVisible = function(v) element.Visible = v end, GetValue = function() return color end, SetValue = function(val) color = val; if flag then CentralUI.Flags[flag] = color end; updateColor(math.floor(color.R * 255), math.floor(color.G * 255), math.floor(color.B * 255)) end, Flag = flag }
     table.insert(CentralUI.Registry, obj)
     return obj
@@ -616,16 +644,16 @@ end
 
 function CentralUI:CreateConfigManager(tab)
     CentralUI:CreateSection(tab, "Config Manager")
-    
+
     local inputName = CentralUI:CreateInput(tab, "Config Name", "Enter config name...", "", nil, nil)
     local currentConfigs = CentralUI:GetConfigList()
     local listDropdown = CentralUI:CreateDropdown(tab, "Select Config", currentConfigs, currentConfigs[1] or "None", nil, nil)
-    
+
     CentralUI:CreateButton(tab, "Refresh List", function()
         local newConfigs = CentralUI:GetConfigList()
         CentralUI:Notify("System", "List refreshed.", 3)
     end)
-    
+
     CentralUI:CreateButton(tab, "Save Config", function()
         local name = inputName.GetValue()
         if name ~= "" then
@@ -638,7 +666,7 @@ function CentralUI:CreateConfigManager(tab)
             CentralUI:Notify("Config", "Enter a name first!", 3)
         end
     end)
-    
+
     CentralUI:CreateButton(tab, "Load Config", function()
         local selected = listDropdown.GetValue()
         if selected and selected ~= "None" and selected ~= "No configs found" then
@@ -649,7 +677,7 @@ function CentralUI:CreateConfigManager(tab)
             end
         end
     end)
-    
+
     CentralUI:CreateButton(tab, "Delete Config", function()
         local selected = listDropdown.GetValue()
         if selected and selected ~= "None" and selected ~= "No configs found" then
