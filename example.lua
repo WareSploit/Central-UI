@@ -1,122 +1,176 @@
---[[
-    ╔═══════════════════════════════════════════════════════════════════╗
-    ║  Central UI - Example Script                                      ║
-    ║  This script demonstrates all available UI elements.              ║
-    ║  Author: WareSploit                                               ║
-    ╚═══════════════════════════════════════════════════════════════════╝
-]]
+-- Central UI Library - Example Script
+-- Demonstrates all available elements and features
 
--- ВАЖНО: Используется raw-ссылка с githubusercontent.com
-local CentralUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/WareSploit/Central-UI/main/main.lua"))()
+local CentralUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/WareSploit/Central-UI/main/main.lua?v=1"))()
 
--- Создание уведомления
-CentralUI:Notify({
-    Title = "Central UI",
-    Content = "Библиотека успешно загружена!",
-    Duration = 5
-})
+-- Create tabs with custom images
+local MainTab = CentralUI:CreateTab("Main", "rbxassetid://10723407389")
+local SettingsTab = CentralUI:CreateTab("Settings", "rbxassetid://10734950309")
+local TeleportTab = CentralUI:CreateTab("Teleport", "rbxassetid://10734934347")
+local AboutTab = CentralUI:CreateTab("About", "rbxassetid://10723415903")
 
--- Создание главного окна
-local Window = CentralUI:CreateWindow({
-    Name = "WareSploit Menu",
-    LoadingTitle = "Central UI",
-    LoadingSubtitle = "by WareSploit",
-    Logo = "rbxassetid://10442402750", -- MAIN-SVG (иконка окна)
-    Watermark = true
-})
+-- ==========================================
+-- MAIN TAB EXAMPLES
+-- ==========================================
 
--- Вкладка 1: Главная (с иконкой USER-IMAGE)
-local MainTab = Window:CreateTab("Main", "rbxassetid://10723407389")
+CentralUI:CreateSection(MainTab, "General")
 
-MainTab:CreateSection("BUTTONS & TOGGLES")
+-- Button
+CentralUI:CreateButton(MainTab, "Click Me", function()
+    CentralUI:Notify("Button Clicked", "You clicked the button!", 3)
+end)
 
-MainTab:CreateButton({
-    Name = "Click Me!",
-    Callback = function()
-        CentralUI:Notify({
-            Title = "Action",
-            Content = "Кнопка была нажата.",
-            Duration = 3
-        })
-    end
-})
+-- Toggle with flag
+local toggle1 = CentralUI:CreateToggle(MainTab, "Enable Feature", true, function(enabled)
+    print("Feature enabled:", enabled)
+end, "feature_enabled")
 
-MainTab:CreateToggle({
-    Name = "Enable Feature",
-    Flag = "FeatureState",
-    CurrentValue = true,
-    Callback = function(state)
-        print("Feature enabled:", state)
-    end
-})
+-- Toggle without flag
+CentralUI:CreateToggle(MainTab, "Auto Save", false, function(enabled)
+    print("Auto save:", enabled)
+end)
 
-MainTab:CreateSection("SLIDERS & INPUTS")
+-- Slider with flag
+local speedSlider = CentralUI:CreateSlider(MainTab, "Speed", 0, 100, 50, function(value)
+    print("Speed changed to:", value)
+end, "speed_value")
 
-MainTab:CreateSlider({
-    Name = "WalkSpeed",
-    Range = {16, 100},
-    Increment = 1,
-    CurrentValue = 16,
-    Suffix = " spd",
-    Flag = "SpeedSlider",
-    Callback = function(val)
-        print("Slider value:", val)
-    end
-})
+-- Input field
+local nicknameInput = CentralUI:CreateInput(MainTab, "Nickname", "Enter your nickname...", "", function(value)
+    print("Nickname set to:", value)
+end, "nickname")
 
-MainTab:CreateInput({
-    Name = "Custom Text",
-    PlaceholderText = "Введите текст...",
-    Flag = "TextInput",
-    RemoveTextAfterFocusLost = false,
-    Callback = function(text)
-        print("Input text:", text)
-    end
-})
+-- Dropdown
+local modeDropdown = CentralUI:CreateDropdown(MainTab, "Select Mode", {"Alpha", "Beta", "Gamma", "Delta"}, "Alpha", function(selected)
+    print("Mode selected:", selected)
+end, "game_mode")
 
-MainTab:CreateSection("DROPDOWNS & KEYBINDS")
+-- Keybind
+local aimKeybind = CentralUI:CreateKeybind(MainTab, "Toggle Aim", "Q", function(key)
+    print("Aim key set to:", key)
+end, "aim_key")
 
-MainTab:CreateDropdown({
-    Name = "Select Mode",
-    Options = {"Alpha", "Beta", "Gamma", "Delta", "Epsilon"},
-    CurrentOption = "Alpha",
-    Flag = "SelectedMode",
-    Callback = function(option)
-        print("Dropdown selected:", option)
-    end
-})
+-- Color Picker
+local colorPicker = CentralUI:CreateColorPicker(MainTab, "Highlight Color", Color3.fromRGB(181, 181, 181), function(color)
+    print("Color changed to:", color)
+end, "highlight_color")
 
-MainTab:CreateKeybind({
-    Name = "Toggle Aim",
-    CurrentKeybind = "Q",
-    Flag = "AimKey",
-    OnPressed = function()
-        print("Keybind pressed!")
-    end
-})
+CentralUI:CreateLabel(MainTab, "Just a static label")
 
-MainTab:CreateColorPicker({
-    Name = "Highlight Color",
-    Color = Color3.fromRGB(221, 221, 226),
-    Flag = "HighlightColor",
-    Callback = function(color)
-        print("Color changed:", color)
-    end
-})
+CentralUI:CreateSection(MainTab, "Info")
 
-MainTab:CreateSection("INFO")
-MainTab:CreateParagraph({
-    Title = "About Central UI",
-    Content = "A sleek, monochrome UI library created by WareSploit. Fully customizable and easy to use.",
-})
+CentralUI:CreateParagraph(MainTab, "About", "This is a paragraph. Long text wraps here.")
 
--- Вкладка 2: Настройки (с иконкой USER-IMAGE)
-local SettingsTab = Window:CreateTab("Settings", "rbxassetid://10734950309")
+-- ==========================================
+-- SETTINGS TAB EXAMPLES
+-- ==========================================
 
-SettingsTab:CreateSection("CONFIGURATION")
-SettingsTab:CreateButton({ Name = "Save Config" })
-SettingsTab:CreateButton({ Name = "Load Config" })
-SettingsTab:CreateButton({ Name = "Reset Settings" })
+CentralUI:CreateSection(SettingsTab, "Config")
 
-SettingsTab:CreateLabel("Central UI v" .. CentralUI.Version)
-SettingsTab:CreateLabel("Made by " .. CentralUI.Author)
+CentralUI:CreateButton(SettingsTab, "Save Config", function()
+    CentralUI:Notify("Config Saved", "Your configuration has been saved successfully!", 3)
+end)
+
+CentralUI:CreateButton(SettingsTab, "Load Config", function()
+    CentralUI:Notify("Config Loaded", "Configuration loaded from storage!", 3)
+end)
+
+CentralUI:CreateButton(SettingsTab, "Reset", function()
+    CentralUI:Notify("Reset Complete", "All settings have been reset to default.", 3)
+end)
+
+CentralUI:CreateToggle(SettingsTab, "Notifications", true, function(enabled)
+    print("Notifications:", enabled)
+end, "notifications_enabled")
+
+-- ==========================================
+-- TELEPORT TAB EXAMPLES
+-- ==========================================
+
+CentralUI:CreateSection(TeleportTab, "Places")
+
+CentralUI:CreateButton(TeleportTab, "Lobby", function()
+    CentralUI:Notify("Teleporting", "Teleporting to Lobby...", 2)
+    -- game:GetService("TeleportService"):Teleport(placeId)
+end)
+
+CentralUI:CreateButton(TeleportTab, "Arena", function()
+    CentralUI:Notify("Teleporting", "Teleporting to Arena...", 2)
+end)
+
+CentralUI:CreateButton(TeleportTab, "Safe Zone", function()
+    CentralUI:Notify("Teleporting", "Teleporting to Safe Zone...", 2)
+end)
+
+-- ==========================================
+-- ABOUT TAB EXAMPLES
+-- ==========================================
+
+CentralUI:CreateSection(AboutTab, "Central UI")
+
+CentralUI:CreateParagraph(AboutTab, "Version", "v1.0.0")
+CentralUI:CreateParagraph(AboutTab, "Author", "by WareSploit")
+
+CentralUI:CreateButton(AboutTab, "Copy Discord", function()
+    CentralUI:Notify("Copied!", "Discord invite copied to clipboard!", 3)
+end)
+
+-- ==========================================
+-- DEMONSTRATE FLAGS SYSTEM
+-- ==========================================
+
+task.wait(2)
+print("\n=== Current Flags ===")
+for flag, value in pairs(CentralUI.Flags) do
+    print(flag .. ":", tostring(value))
+end
+
+-- ==========================================
+-- DEMONSTRATE NOTIFICATIONS
+-- ==========================================
+
+task.wait(3)
+CentralUI:Notify("Welcome!", "Central UI has been loaded successfully!", 5)
+
+task.wait(2)
+CentralUI:Notify("Tip", "Press RightCtrl or LeftCtrl to toggle the UI!", 4)
+
+-- ==========================================
+-- CREATE WATERMARK
+-- ==========================================
+
+task.wait(2)
+CentralUI:CreateWatermark("Central UI")
+
+-- ==========================================
+-- DYNAMICALLY CHANGE VALUES
+-- ==========================================
+
+task.wait(3)
+print("\n=== Changing values dynamically ===")
+
+-- Change slider value
+speedSlider.SetValue(75)
+print("Speed set to 75")
+
+-- Change toggle state
+toggle1.SetValue(false)
+print("Feature toggled off")
+
+-- Change dropdown selection
+modeDropdown.SetValue("Gamma")
+print("Mode changed to Gamma")
+
+-- Change input value
+nicknameInput.SetValue("ProPlayer")
+print("Nickname changed to ProPlayer")
+
+-- Change keybind
+aimKeybind.SetValue("E")
+print("Aim key changed to E")
+
+-- Change color
+colorPicker.SetValue(Color3.fromRGB(255, 128, 0))
+print("Color changed to orange")
+
+print("\n=== All demonstrations complete! ===")
