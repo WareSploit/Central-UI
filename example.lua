@@ -1,87 +1,122 @@
 --[[
-    Central UI — Usage Example
+    ╔═══════════════════════════════════════════════════════════════════╗
+    ║  Central UI - Example Script                                      ║
+    ║  This script demonstrates all available UI elements.              ║
+    ║  Author: WareSploit                                               ║
+    ╚═══════════════════════════════════════════════════════════════════╝
 ]]
 
-local CentralUI = loadstring(game:HttpGet(
-    "https://raw.githubusercontent.com/WareSploit/CentralUI/main/main.lua"
-))()
+-- ВАЖНО: Используется raw-ссылка с githubusercontent.com
+local CentralUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/WareSploit/Central-UI/main/main.lua"))()
 
--- Watermark
-CentralUI:CreateWatermark({ Text = "Central UI | WareSploit" })
+-- Создание уведомления
+CentralUI:Notify({
+    Title = "Central UI",
+    Content = "Библиотека успешно загружена!",
+    Duration = 5
+})
 
--- Welcome + Window
-local Win = CentralUI:CreateWindow({
-    Name = "WareSploit's Menu",
+-- Создание главного окна
+local Window = CentralUI:CreateWindow({
+    Name = "WareSploit Menu",
     LoadingTitle = "Central UI",
     LoadingSubtitle = "by WareSploit",
-    Logo = "rbxassetid://10442402750",  -- MAIN-SVG
+    Logo = "rbxassetid://10442402750", -- MAIN-SVG (иконка окна)
+    Watermark = true
 })
 
--- Tab "Main"
-local Main = Win:CreateTab("Main", "rbxassetid://10723407389")
+-- Вкладка 1: Главная (с иконкой USER-IMAGE)
+local MainTab = Window:CreateTab("Main", "rbxassetid://10723407389")
 
-Main:CreateSection("GENERAL")
+MainTab:CreateSection("BUTTONS & TOGGLES")
 
-Main:CreateButton({
-    Name = "Click Me",
+MainTab:CreateButton({
+    Name = "Click Me!",
     Callback = function()
-        CentralUI:Notify({ Title = "Action", Content = "Button clicked!" })
-    end,
+        CentralUI:Notify({
+            Title = "Action",
+            Content = "Кнопка была нажата.",
+            Duration = 3
+        })
+    end
 })
 
-Main:CreateToggle({
+MainTab:CreateToggle({
     Name = "Enable Feature",
-    Flag = "EnableFeature",
+    Flag = "FeatureState",
     CurrentValue = true,
-    Callback = function(v) print("Toggle:", v) end,
+    Callback = function(state)
+        print("Feature enabled:", state)
+    end
 })
 
-Main:CreateSlider({
-    Name = "Speed",
-    Range = {0, 100},
+MainTab:CreateSection("SLIDERS & INPUTS")
+
+MainTab:CreateSlider({
+    Name = "WalkSpeed",
+    Range = {16, 100},
     Increment = 1,
-    CurrentValue = 50,
-    Suffix = "%",
-    Flag = "Speed",
-    Callback = function(v) print("Speed:", v) end,
+    CurrentValue = 16,
+    Suffix = " spd",
+    Flag = "SpeedSlider",
+    Callback = function(val)
+        print("Slider value:", val)
+    end
 })
 
-Main:CreateInput({
-    Name = "Nickname",
-    PlaceholderText = "Enter nickname...",
-    Flag = "Nickname",
+MainTab:CreateInput({
+    Name = "Custom Text",
+    PlaceholderText = "Введите текст...",
+    Flag = "TextInput",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(text)
+        print("Input text:", text)
+    end
 })
 
-Main:CreateDropdown({
+MainTab:CreateSection("DROPDOWNS & KEYBINDS")
+
+MainTab:CreateDropdown({
     Name = "Select Mode",
-    Options = {"Alpha", "Beta", "Gamma", "Delta"},
+    Options = {"Alpha", "Beta", "Gamma", "Delta", "Epsilon"},
     CurrentOption = "Alpha",
-    Flag = "Mode",
-    Callback = function(opt) print("Selected:", opt) end,
+    Flag = "SelectedMode",
+    Callback = function(option)
+        print("Dropdown selected:", option)
+    end
 })
 
-Main:CreateKeybind({
+MainTab:CreateKeybind({
     Name = "Toggle Aim",
     CurrentKeybind = "Q",
     Flag = "AimKey",
-    OnPressed = function() print("Aim pressed!") end,
+    OnPressed = function()
+        print("Keybind pressed!")
+    end
 })
 
-Main:CreateColorPicker({
+MainTab:CreateColorPicker({
     Name = "Highlight Color",
     Color = Color3.fromRGB(221, 221, 226),
     Flag = "HighlightColor",
+    Callback = function(color)
+        print("Color changed:", color)
+    end
 })
 
-Main:CreateLabel("Just a static label")
-Main:CreateSection("INFO")
-Main:CreateParagraph({
-    Title = "About",
-    Content = "Central UI — dark monochrome library by WareSploit.",
+MainTab:CreateSection("INFO")
+MainTab:CreateParagraph({
+    Title = "About Central UI",
+    Content = "A sleek, monochrome UI library created by WareSploit. Fully customizable and easy to use.",
 })
 
-CentralUI:Notify({
-    Title = "Welcome",
-    Content = "Central UI loaded successfully!",
-    Duration = 5,
-})
+-- Вкладка 2: Настройки (с иконкой USER-IMAGE)
+local SettingsTab = Window:CreateTab("Settings", "rbxassetid://10734950309")
+
+SettingsTab:CreateSection("CONFIGURATION")
+SettingsTab:CreateButton({ Name = "Save Config" })
+SettingsTab:CreateButton({ Name = "Load Config" })
+SettingsTab:CreateButton({ Name = "Reset Settings" })
+
+SettingsTab:CreateLabel("Central UI v" .. CentralUI.Version)
+SettingsTab:CreateLabel("Made by " .. CentralUI.Author)
