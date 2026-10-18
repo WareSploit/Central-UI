@@ -15,7 +15,6 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
 
 local CONFIG = {
     Colors = {
@@ -42,24 +41,22 @@ local CONFIG = {
 CentralUI.Flags = {}
 CentralUI.Registry = {}
 
--- Helper Functions
 local function GetExecutor()
     local executors = { "Solara", "Xeno", "Velocity", "Madium", "Real", "Potassium", "Volt" }
     for _, name in ipairs(executors) do
         if getgenv and getgenv()[name] then return name end
     end
     if identifyexecutor then
-        local success, execName = pcall(identifyexecutor)
-        if success and execName then return execName end
+        local ok, name = pcall(identifyexecutor)
+        if ok and name then return name end
     end
     return "Unknown"
 end
-
 local ExecutorName = GetExecutor()
 
 local function TweenProperty(instance, property, goal, duration, easingStyle, easingDirection)
-    local tweenInfo = TweenInfo.new(duration or 0.25, easingStyle or Enum.EasingStyle.Back, easingDirection or Enum.EasingDirection.Out)
-    return TweenService:Create(instance, tweenInfo, {[property] = goal})
+    local info = TweenInfo.new(duration or 0.25, easingStyle or Enum.EasingStyle.Back, easingDirection or Enum.EasingDirection.Out)
+    return TweenService:Create(instance, info, {[property] = goal})
 end
 
 local function CreateInstance(class, parent, properties)
@@ -71,34 +68,26 @@ local function CreateInstance(class, parent, properties)
     return instance
 end
 
--- Setup Config Folder
 if makefolder then pcall(makefolder, CONFIG.ConfigFolder) end
 
 -- ==========================================
--- CONTAINER SELECTION (ESC-proof)
+-- CONTAINER (ESC-proof)
 -- ==========================================
 local _container
 do
-    -- 1) gethui() — лучший вариант: скрытый контейнер исполнителя
     local ok, result = pcall(function() return gethui() end)
     if ok and result then
         _container = result
     else
-        -- 2) CoreGui — иногда доступен напрямую
         local ok2, result2 = pcall(function() return game:GetService("CoreGui") end)
-        if ok2 and result2 then
-            _container = result2
-        else
-            -- 3) PlayerGui — запасной вариант (ESC перекроет GUI)
-            _container = PlayerGui
-        end
+        if ok2 and result2 then _container = result2
+        else _container = PlayerGui end
     end
 end
 
--- Удаляем старый инстанс, если скрипт перезапускают
 pcall(function()
     local old = _container:FindFirstChild("CentralUI")
-    if old and old ~= PlayerGui:FindFirstChild("CentralUI") then old:Destroy() end
+    if old then old:Destroy() end
 end)
 pcall(function()
     local old = PlayerGui:FindFirstChild("CentralUI")
@@ -115,7 +104,7 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = _container
 
 -- ==========================================
--- WELCOME FRAME
+-- WELCOME
 -- ==========================================
 local WelcomerFrame = CreateInstance("Frame", ScreenGui, {
     BorderSizePixel = 0, BackgroundColor3 = Color3.fromRGB(11, 11, 13),
@@ -125,7 +114,6 @@ CreateInstance("UICorner", WelcomerFrame, {CornerRadius = UDim.new(0, 6)})
 CreateInstance("UIStroke", WelcomerFrame, {Transparency = 0.5, Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
 
 local WelcomerContent = CreateInstance("Frame", WelcomerFrame, {Size = UDim2.new(0, 420, 0, 200), Position = UDim2.new(0.5, -210, 0.5, -100), Name = "Content", BackgroundTransparency = 1})
-
 CreateInstance("ImageLabel", WelcomerContent, {
     BorderSizePixel = 0, BackgroundColor3 = Color3.fromRGB(255, 255, 255), Image = CONFIG.LogoID,
     Size = UDim2.new(0, 107, 0, 104), BackgroundTransparency = 1, Name = "MAIN-SVG", Position = UDim2.new(0.37046, 0, -0.17182, 0)
@@ -156,7 +144,9 @@ CreateInstance("TextLabel", WelcomerFrame, {
     TextColor3 = CONFIG.Colors.Subtext, BackgroundTransparency = 1, Size = UDim2.new(0, 80, 0, 18), Text = CONFIG.Version, Name = "Version", Position = UDim2.new(1, -90, 1, -28)
 })
 
--- Main Window
+-- ==========================================
+-- MAIN WINDOW
+-- ==========================================
 local MainWindow = CreateInstance("Frame", ScreenGui, {
     Visible = false, BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Background,
     ClipsDescendants = true, Size = UDim2.new(0, 540, 0, 380), Position = UDim2.new(0.5, -270, 0.5, -190), Name = "MainWindow"
@@ -166,7 +156,6 @@ CreateInstance("UIStroke", MainWindow, {Transparency = 0.5, Color = CONFIG.Color
 
 local WindowScale = Instance.new("UIScale"); WindowScale.Scale = 0.9; WindowScale.Parent = MainWindow
 
--- Loading Animation
 task.spawn(function()
     for i = 0, 100, 2 do
         task.wait(0.02)
@@ -200,7 +189,6 @@ CreateInstance("ImageLabel", Topbar, {
     Size = UDim2.new(0, 62, 0, 55), BackgroundTransparency = 1, Name = "MAIN-SVG", Position = UDim2.new(0, 0, -0.1087, 0)
 })
 
--- Buttons
 local MinBtn = CreateInstance("TextButton", Topbar, {
     BorderSizePixel = 0, TextSize = 14, AutoButtonColor = false, TextColor3 = CONFIG.Colors.Subtext,
     BackgroundColor3 = CONFIG.Colors.Element, FontFace = CONFIG.Fonts.Bold,
@@ -217,7 +205,7 @@ local CloseBtn = CreateInstance("TextButton", Topbar, {
 CreateInstance("UICorner", CloseBtn, {CornerRadius = UDim.new(0, 4)})
 CreateInstance("UIStroke", CloseBtn, {Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
 
--- Dragging Logic
+-- Dragging
 local dragging, dragInput, dragStart, startPos = false, nil, nil, nil
 Topbar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -235,7 +223,7 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- Tab & Content Holders
+-- Tab system
 local TabHolder = CreateInstance("Frame", MainWindow, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Background, Size = UDim2.new(0, 140, 1, -46), Position = UDim2.new(0, 0, 0, 46), Name = "TabHolder"})
 local TabScroll = CreateInstance("ScrollingFrame", TabHolder, {BorderSizePixel = 0, Name = "TabScroll", AutomaticCanvasSize = Enum.AutomaticSize.Y, Size = UDim2.new(1, 0, 1, 0), ScrollBarImageColor3 = CONFIG.Colors.Subtext, ScrollBarThickness = 2, BackgroundTransparency = 1})
 CreateInstance("UIPadding", TabScroll, {PaddingTop = UDim.new(0, 8), PaddingRight = UDim.new(0, 8), PaddingLeft = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8)})
@@ -243,7 +231,7 @@ CreateInstance("UIListLayout", TabScroll, {Padding = UDim.new(0, 4), SortOrder =
 
 local ContentHolder = CreateInstance("Frame", MainWindow, {ClipsDescendants = true, Size = UDim2.new(1, -140, 1, -46), Position = UDim2.new(0, 140, 0, 46), Name = "ContentHolder", BackgroundTransparency = 1})
 
--- Minimize Logic
+-- Minimize
 local isMinimized = false
 MinBtn.MouseButton1Click:Connect(function()
     dragging = false
@@ -259,7 +247,7 @@ MinBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Close Confirmation
+-- Close dialog
 local ConfirmOverlay = CreateInstance("Frame", ScreenGui, {
     Visible = false, BorderSizePixel = 0, BackgroundColor3 = Color3.new(0,0,0), BackgroundTransparency = 0.5, Size = UDim2.new(1,0,1,0), ZIndex = 50
 })
@@ -285,7 +273,7 @@ YesBtn.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = false; Scre
 NoBtn.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = false end)
 CloseBtn.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = true end)
 
--- Toggle visibility (Ctrl)
+-- Ctrl toggle
 local isOpen = true
 UserInputService.InputBegan:Connect(function(input, gp)
     if gp then return end
@@ -295,7 +283,9 @@ UserInputService.InputBegan:Connect(function(input, gp)
     end
 end)
 
--- Tab system
+-- ==========================================
+-- PUBLIC API
+-- ==========================================
 local Tabs = {}
 local CurrentTab = nil
 
@@ -317,7 +307,8 @@ function CentralUI:CreateTab(name, imageId)
     end
 
     local contentFrame = CreateInstance("ScrollingFrame", ContentHolder, {
-        Visible = false, BorderSizePixel = 0, CanvasSize = UDim2.new(0, 0, 0, 0), AutomaticCanvasSize = Enum.AutomaticSize.Y, Size = UDim2.new(1, 0, 1, 0), ScrollBarImageColor3 = CONFIG.Colors.Stroke, ScrollBarThickness = 3, BackgroundTransparency = 1, LayoutOrder = #Tabs + 1
+        Visible = false, BorderSizePixel = 0, CanvasSize = UDim2.new(0, 0, 0, 0), AutomaticCanvasSize = Enum.AutomaticSize.Y,
+        Size = UDim2.new(1, 0, 1, 0), ScrollBarImageColor3 = CONFIG.Colors.Stroke, ScrollBarThickness = 3, BackgroundTransparency = 1, LayoutOrder = #Tabs + 1
     })
     CreateInstance("UIPadding", contentFrame, {PaddingTop = UDim.new(0, 8), PaddingRight = UDim.new(0, 8), PaddingLeft = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8)})
     CreateInstance("UIListLayout", contentFrame, {Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder})
@@ -338,7 +329,10 @@ function CentralUI:CreateTab(name, imageId)
     function tabData:SetName(newName) tabBtn.Text = newName; tabData.Name = newName end
 
     table.insert(Tabs, tabData)
-    if #Tabs == 1 then tabBtn.TextColor3 = CONFIG.Colors.Text; tabBtn.BackgroundColor3 = CONFIG.Colors.Element; contentFrame.Visible = true; CurrentTab = tabData end
+    if #Tabs == 1 then
+        tabBtn.TextColor3 = CONFIG.Colors.Text; tabBtn.BackgroundColor3 = CONFIG.Colors.Element
+        contentFrame.Visible = true; CurrentTab = tabData
+    end
     return tabData
 end
 
@@ -355,9 +349,6 @@ function CentralUI:RemoveTab(tabData)
     end
 end
 
--- ==========================================
--- UI ELEMENTS
--- ==========================================
 function CentralUI:CreateSection(tab, title)
     local section = CreateInstance("Frame", tab.Content, {Size = UDim2.new(1, 0, 0, 24), BackgroundTransparency = 1})
     local lbl = CreateInstance("TextLabel", section, {TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left, FontFace = CONFIG.Fonts.Medium, TextColor3 = CONFIG.Colors.Subtext, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 20), Text = title:upper()})
@@ -428,7 +419,7 @@ function CentralUI:CreateSlider(tab, text, min, max, default, callback, flag)
     CreateInstance("UICorner", sliderKnob, {CornerRadius = UDim.new(0, 6)})
     CreateInstance("UIStroke", sliderKnob, {Thickness = 2, Color = CONFIG.Colors.Accent, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
 
-    local dragging = false
+    local draggingSlider = false
     local function updateSlider(input)
         local percent = math.clamp((input.Position.X - sliderBg.AbsolutePosition.X) / sliderBg.AbsoluteSize.X, 0, 1)
         value = math.floor(min + (max - min) * percent + 0.5)
@@ -436,9 +427,9 @@ function CentralUI:CreateSlider(tab, text, min, max, default, callback, flag)
         sliderFill.Size = UDim2.new(percent, 0, 1, 0); sliderKnob.Position = UDim2.new(percent, -6, 0.5, -6); valueText.Text = tostring(value)
         if callback then callback(value) end
     end
-    sliderBg.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then updateSlider(input); dragging = true end end)
-    UserInputService.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then updateSlider(input) end end)
-    UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
+    sliderBg.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then updateSlider(input); draggingSlider = true end end)
+    UserInputService.InputChanged:Connect(function(input) if draggingSlider and input.UserInputType == Enum.UserInputType.MouseMovement then updateSlider(input) end end)
+    UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then draggingSlider = false end end)
 
     local obj = { Remove = function() element:Destroy() end, SetName = function(txt) lbl.Text = txt end, SetVisible = function(v) element.Visible = v end, GetValue = function() return value end, SetValue = function(val) value = math.clamp(val, min, max); if flag then CentralUI.Flags[flag] = value end; local percent = (value - min) / (max - min); sliderFill.Size = UDim2.new(percent, 0, 1, 0); sliderKnob.Position = UDim2.new(percent, -6, 0.5, -6); valueText.Text = tostring(value); if callback then callback(value) end end, Flag = flag }
     table.insert(CentralUI.Registry, obj)
@@ -587,46 +578,36 @@ end
 -- ==========================================
 -- CONFIG MANAGER
 -- ==========================================
-function CentralUI:SaveConfig(configName)
+function CentralUI:SaveConfig(name)
     if not writefile then return false end
-    local success, encoded = pcall(function() return HttpService:JSONEncode(CentralUI.Flags) end)
-    if success then
-        local success2 = pcall(writefile, CONFIG.ConfigFolder .. "/" .. configName .. ".json", encoded)
-        return success2
-    end
+    local ok, encoded = pcall(function() return HttpService:JSONEncode(CentralUI.Flags) end)
+    if ok then return pcall(writefile, CONFIG.ConfigFolder .. "/" .. name .. ".json", encoded) end
     return false
 end
 
-function CentralUI:LoadConfig(configName)
+function CentralUI:LoadConfig(name)
     if not readfile or not isfile then return false end
-    local path = CONFIG.ConfigFolder .. "/" .. configName .. ".json"
-    if isfile(path) then
-        local success, content = pcall(readfile, path)
-        if success then
-            local success2, decoded = pcall(function() return HttpService:JSONDecode(content) end)
-            if success2 then
-                for flag, value in pairs(decoded) do
-                    CentralUI.Flags[flag] = value
-                    for _, element in ipairs(CentralUI.Registry) do
-                        if element.Flag == flag and element.SetValue then
-                            pcall(function() element.SetValue(value) end)
-                        end
-                    end
-                end
-                return true
+    local path = CONFIG.ConfigFolder .. "/" .. name .. ".json"
+    if not isfile(path) then return false end
+    local ok, content = pcall(readfile, path)
+    if not ok then return false end
+    local ok2, decoded = pcall(function() return HttpService:JSONDecode(content) end)
+    if not ok2 then return false end
+    for flag, value in pairs(decoded) do
+        CentralUI.Flags[flag] = value
+        for _, element in ipairs(CentralUI.Registry) do
+            if element.Flag == flag and element.SetValue then
+                pcall(function() element.SetValue(value) end)
             end
         end
     end
-    return false
+    return true
 end
 
-function CentralUI:DeleteConfig(configName)
+function CentralUI:DeleteConfig(name)
     if not delfile then return false end
-    local path = CONFIG.ConfigFolder .. "/" .. configName .. ".json"
-    if isfile(path) then
-        local success = pcall(delfile, path)
-        return success
-    end
+    local path = CONFIG.ConfigFolder .. "/" .. name .. ".json"
+    if isfile(path) then return pcall(delfile, path) end
     return false
 end
 
@@ -644,53 +625,39 @@ end
 
 function CentralUI:CreateConfigManager(tab)
     CentralUI:CreateSection(tab, "Config Manager")
-
     local inputName = CentralUI:CreateInput(tab, "Config Name", "Enter config name...", "", nil, nil)
     local currentConfigs = CentralUI:GetConfigList()
     local listDropdown = CentralUI:CreateDropdown(tab, "Select Config", currentConfigs, currentConfigs[1] or "None", nil, nil)
 
     CentralUI:CreateButton(tab, "Refresh List", function()
-        local newConfigs = CentralUI:GetConfigList()
         CentralUI:Notify("System", "List refreshed.", 3)
     end)
-
     CentralUI:CreateButton(tab, "Save Config", function()
         local name = inputName.GetValue()
         if name ~= "" then
-            if CentralUI:SaveConfig(name) then
-                CentralUI:Notify("Config", "Saved: " .. name, 3)
-            else
-                CentralUI:Notify("Config", "Failed to save!", 3)
-            end
-        else
-            CentralUI:Notify("Config", "Enter a name first!", 3)
-        end
+            if CentralUI:SaveConfig(name) then CentralUI:Notify("Config", "Saved: " .. name, 3)
+            else CentralUI:Notify("Config", "Failed to save!", 3) end
+        else CentralUI:Notify("Config", "Enter a name first!", 3) end
     end)
-
     CentralUI:CreateButton(tab, "Load Config", function()
         local selected = listDropdown.GetValue()
         if selected and selected ~= "None" and selected ~= "No configs found" then
-            if CentralUI:LoadConfig(selected) then
-                CentralUI:Notify("Config", "Loaded: " .. selected, 3)
-            else
-                CentralUI:Notify("Config", "Failed to load!", 3)
-            end
+            if CentralUI:LoadConfig(selected) then CentralUI:Notify("Config", "Loaded: " .. selected, 3)
+            else CentralUI:Notify("Config", "Failed to load!", 3) end
         end
     end)
-
     CentralUI:CreateButton(tab, "Delete Config", function()
         local selected = listDropdown.GetValue()
         if selected and selected ~= "None" and selected ~= "No configs found" then
-            if CentralUI:DeleteConfig(selected) then
-                CentralUI:Notify("Config", "Deleted: " .. selected, 3)
-            else
-                CentralUI:Notify("Config", "Failed to delete!", 3)
-            end
+            if CentralUI:DeleteConfig(selected) then CentralUI:Notify("Config", "Deleted: " .. selected, 3)
+            else CentralUI:Notify("Config", "Failed to delete!", 3) end
         end
     end)
 end
 
--- Notifications & Watermark
+-- ==========================================
+-- NOTIFICATIONS & WATERMARK
+-- ==========================================
 local NotificationContainer = CreateInstance("Frame", ScreenGui, {Size = UDim2.new(0, 300, 1, 0), Position = UDim2.new(1, -320, 0, 0), BackgroundTransparency = 1, Name = "NotificationContainer"})
 CreateInstance("UIListLayout", NotificationContainer, {Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder, VerticalAlignment = Enum.VerticalAlignment.Bottom})
 
@@ -704,7 +671,11 @@ function CentralUI:Notify(title, text, duration)
     CreateInstance("TextLabel", notif, {TextWrapped = true, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Subtext, BackgroundTransparency = 1, Size = UDim2.new(1, -20, 0, 28), Text = text, Position = UDim2.new(0, 12, 0, 28)})
     TweenProperty(notif, "Size", UDim2.new(0, 300, 0, 60), 0.3):Play()
     TweenProperty(notifScale, "Scale", 1, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out):Play()
-    task.delay(duration, function() TweenProperty(notif, "Size", UDim2.new(0, 300, 0, 0), 0.3):Play(); TweenProperty(notifScale, "Scale", 0, 0.3):Play(); task.wait(0.3); notif:Destroy() end)
+    task.delay(duration, function()
+        TweenProperty(notif, "Size", UDim2.new(0, 300, 0, 0), 0.3):Play()
+        TweenProperty(notifScale, "Scale", 0, 0.3):Play()
+        task.wait(0.3); notif:Destroy()
+    end)
 end
 
 local Watermark = CreateInstance("Frame", ScreenGui, {Visible = false, BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Background, Size = UDim2.new(0, 240, 0, 28), Position = UDim2.new(1, -260, 0, 20), Name = "Watermark"})
@@ -719,4 +690,7 @@ function CentralUI:CreateWatermark(text)
     else watermarkText.Text = "Central UI " .. CONFIG.Version .. executorInfo end
 end
 
+-- ==========================================
+-- ВАЖНО: возвращаем таблицу для loadstring
+-- ==========================================
 return CentralUI
