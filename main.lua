@@ -1,8 +1,9 @@
 --!nolint UndefinedVariable
 --[=[
-    Central UI Library v4.1 (Fixed)
+    Central UI Library v4.2
     Monochrome Dark Theme
     Author: WareSploit
+    Repository: https://github.com/WareSploit/Central-UI
 ]=]
 
 local CentralUI = {}
@@ -33,7 +34,7 @@ local CONFIG = {
         Bold = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
     },
     LogoID = "rbxassetid://10442402750",
-    Version = "v4.1.0",
+    Version = "v4.2.0",
     ConfigFolder = "CentralUI_Configs"
 }
 
@@ -185,7 +186,7 @@ local CloseBtn = CreateInstance("TextButton", Topbar, {
 CreateInstance("UICorner", CloseBtn, {CornerRadius = UDim.new(0, 4)})
 CreateInstance("UIStroke", CloseBtn, {Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
 
--- Dragging
+-- Dragging Logic
 local dragging, dragInput, dragStart, startPos = false, nil, nil, nil
 Topbar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -203,7 +204,10 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- Tab & Content Holders (Created BEFORE Minimize Logic)
+-- ==========================================
+-- TAB & CONTENT HOLDERS (CREATED BEFORE MINIMIZE LOGIC)
+-- ==========================================
+
 local TabHolder = CreateInstance("Frame", MainWindow, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Background, Size = UDim2.new(0, 140, 1, -46), Position = UDim2.new(0, 0, 0, 46), Name = "TabHolder"})
 local TabScroll = CreateInstance("ScrollingFrame", TabHolder, {BorderSizePixel = 0, Name = "TabScroll", AutomaticCanvasSize = Enum.AutomaticSize.Y, Size = UDim2.new(1, 0, 1, 0), ScrollBarImageColor3 = CONFIG.Colors.Subtext, ScrollBarThickness = 2, BackgroundTransparency = 1})
 CreateInstance("UIPadding", TabScroll, {PaddingTop = UDim.new(0, 8), PaddingRight = UDim.new(0, 8), PaddingLeft = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8)})
@@ -211,21 +215,36 @@ CreateInstance("UIListLayout", TabScroll, {Padding = UDim.new(0, 4), SortOrder =
 
 local ContentHolder = CreateInstance("Frame", MainWindow, {ClipsDescendants = true, Size = UDim2.new(1, -140, 1, -46), Position = UDim2.new(0, 140, 0, 46), Name = "ContentHolder", BackgroundTransparency = 1})
 
--- Minimize Logic (FIXED)
+-- ==========================================
+-- MINIMIZE LOGIC (FIXED)
+-- ==========================================
+
 local isMinimized = false
 MinBtn.MouseButton1Click:Connect(function()
+    -- Stop dragging immediately to prevent conflicts
     dragging = false 
+    
     isMinimized = not isMinimized
+    
     if isMinimized then
-        -- Hide content but keep window structure
+        -- Hide content instantly so it doesn't clip during animation
         TabHolder.Visible = false
         ContentHolder.Visible = false
+        
+        -- Animate Window Height to Topbar size only
         TweenProperty(MainWindow, "Size", UDim2.new(0, 540, 0, 46), 0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out):Play()
+        
+        -- Change button text
         MinBtn.Text = "+"
     else
+        -- Show content again
         TabHolder.Visible = true
         ContentHolder.Visible = true
+        
+        -- Animate Window Height back to normal
         TweenProperty(MainWindow, "Size", UDim2.new(0, 540, 0, 380), 0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out):Play()
+        
+        -- Change button text
         MinBtn.Text = "—"
     end
 end)
@@ -557,7 +576,7 @@ function CentralUI:CreateParagraph(tab, title, description)
 end
 
 -- ==========================================
--- CONFIG MANAGER (FIXED)
+-- CONFIG MANAGER
 -- ==========================================
 function CentralUI:SaveConfig(configName)
     if not writefile then return false end
@@ -626,9 +645,6 @@ function CentralUI:CreateConfigManager(tab)
     -- Refresh Button to update dropdown
     CentralUI:CreateButton(tab, "Refresh List", function()
         local newConfigs = CentralUI:GetConfigList()
-        -- Re-create dropdown logic is complex, so we just notify user or you can implement full rebuild
-        -- For simplicity in this structure, we rely on user saving/loading by name mostly.
-        -- But let's try to update the dropdown options visually if possible (hard without rebuilding)
         CentralUI:Notify("System", "List refreshed. Save a new config to see it.", 3)
     end)
     
@@ -637,7 +653,6 @@ function CentralUI:CreateConfigManager(tab)
         if name ~= "" then
             if CentralUI:SaveConfig(name) then
                 CentralUI:Notify("Config", "Saved: " .. name, 3)
-                -- Ideally refresh dropdown here
             else
                 CentralUI:Notify("Config", "Failed to save!", 3)
             end
