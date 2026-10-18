@@ -95,7 +95,9 @@ ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = PlayerGui
 
--- Welcomer (Loading Screen) - Centered
+-- ==========================================
+-- WELCOME FRAME (Идеальные отступы)
+-- ==========================================
 local WelcomerFrame = CreateInstance("Frame", ScreenGui, {
     BorderSizePixel = 0,
     BackgroundColor3 = Color3.fromRGB(11, 11, 13),
@@ -117,7 +119,7 @@ local WelcomerContent = CreateInstance("Frame", WelcomerFrame, {
     BackgroundTransparency = 1
 })
 
--- ИСПРАВЛЕНО: Иконка поднята наверх (Y = 5)
+-- Иконка (Y = 0)
 CreateInstance("ImageLabel", WelcomerContent, {
     BorderSizePixel = 0,
     BackgroundColor3 = Color3.fromRGB(255, 255, 255),
@@ -125,10 +127,10 @@ CreateInstance("ImageLabel", WelcomerContent, {
     Size = UDim2.new(0, 107, 0, 74),
     BackgroundTransparency = 1,
     Name = "MAIN-SVG",
-    Position = UDim2.new(0.5, -53.5, 0, 5) 
+    Position = UDim2.new(0.5, -53.5, 0, 0) 
 })
 
--- ИСПРАВЛЕНО: Текст опущен вниз (Y = 75), чтобы не наезжать на иконку
+-- Заголовок (Y = 80) - идеальный отступ
 CreateInstance("TextLabel", WelcomerContent, {
     TextSize = 34,
     FontFace = CONFIG.Fonts.Bold,
@@ -137,10 +139,10 @@ CreateInstance("TextLabel", WelcomerContent, {
     Size = UDim2.new(1, 0, 0, 46),
     Text = "Central UI",
     Name = "Title",
-    Position = UDim2.new(0, 0, 0, 75)
+    Position = UDim2.new(0, 0, 0, 80)
 })
 
--- ИСПРАВЛЕНО: Сабтайтл опущен (Y = 120)
+-- Сабтайтл (Y = 125)
 CreateInstance("TextLabel", WelcomerContent, {
     TextSize = 13,
     FontFace = CONFIG.Fonts.Regular,
@@ -149,15 +151,15 @@ CreateInstance("TextLabel", WelcomerContent, {
     Size = UDim2.new(1, 0, 0, 18),
     Text = "Loading, please wait...",
     Name = "Subtitle",
-    Position = UDim2.new(0, 0, 0, 120)
+    Position = UDim2.new(0, 0, 0, 125)
 })
 
--- ИСПРАВЛЕНО: Прогресс-бар смещен вниз (Y = 150)
+-- Прогресс-бар (Y = 155)
 local ProgressBar = CreateInstance("Frame", WelcomerContent, {
     BorderSizePixel = 0,
     BackgroundColor3 = CONFIG.Colors.Element,
     Size = UDim2.new(0.7, 0, 0, 3),
-    Position = UDim2.new(0.15, 0, 0, 150),
+    Position = UDim2.new(0.15, 0, 0, 155),
     Name = "ProgressBar"
 })
 CreateInstance("UICorner", ProgressBar, {CornerRadius = UDim.new(0, 2)})
@@ -170,7 +172,7 @@ local ProgressFill = CreateInstance("Frame", ProgressBar, {
 })
 CreateInstance("UICorner", ProgressFill, {CornerRadius = UDim.new(0, 2)})
 
--- ИСПРАВЛЕНО: Проценты смещены вниз (Y = 160)
+-- Проценты (Y = 165)
 local PercentText = CreateInstance("TextLabel", WelcomerContent, {
     TextSize = 11,
     FontFace = CONFIG.Fonts.Regular,
@@ -179,7 +181,7 @@ local PercentText = CreateInstance("TextLabel", WelcomerContent, {
     Size = UDim2.new(1, 0, 0, 16),
     Text = "0%",
     Name = "Percent",
-    Position = UDim2.new(0, 0, 0, 160)
+    Position = UDim2.new(0, 0, 0, 165)
 })
 
 CreateInstance("TextLabel", WelcomerFrame, {
@@ -202,7 +204,7 @@ task.spawn(function()
         PercentText.Text = i .. "%"
     end
     
-    -- Fade out welcomer safely
+    -- Fade out
     TweenProperty(WelcomerFrame, "BackgroundTransparency", 1, 0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
     for _, child in pairs(WelcomerFrame:GetChildren()) do
         if child:IsA("GuiObject") then
@@ -222,7 +224,7 @@ task.spawn(function()
     task.wait(0.5)
     WelcomerFrame.Visible = false
     
-    -- Show main window with animation
+    -- Show main window
     MainWindow.Visible = true
     TweenProperty(WindowScale, "Scale", 1, 0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 end)
@@ -245,7 +247,6 @@ CreateInstance("UIStroke", MainWindow, {
     ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 })
 
--- Add UIScale for animation
 local WindowScale = Instance.new("UIScale")
 WindowScale.Scale = 0.9
 WindowScale.Parent = MainWindow
@@ -287,7 +288,6 @@ CreateInstance("ImageLabel", Topbar, {
     Position = UDim2.new(0, 0, -0.1087, 0)
 })
 
--- Minimize Button
 local MinBtn = CreateInstance("TextButton", Topbar, {
     BorderSizePixel = 0,
     TextSize = 14,
@@ -306,7 +306,6 @@ CreateInstance("UIStroke", MinBtn, {
     ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 })
 
--- Close Button
 local CloseBtn = CreateInstance("TextButton", Topbar, {
     BorderSizePixel = 0,
     TextSize = 12,
@@ -325,7 +324,7 @@ CreateInstance("UIStroke", CloseBtn, {
     ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 })
 
--- Dragging functionality
+-- Dragging functionality (Classic, No Jump)
 local dragging = false
 local dragStart = nil
 local startPos = nil
