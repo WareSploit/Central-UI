@@ -73,14 +73,14 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = PlayerGui
 
 -- ==========================================
--- WELCOME FRAME (ЦЕНТР)
+-- WELCOME FRAME (ИДЕАЛЬНЫЙ ЦЕНТР)
 -- ==========================================
 local WelcomerFrame = CreateInstance("Frame", ScreenGui, {
     BorderSizePixel = 0, 
     BackgroundColor3 = Color3.fromRGB(11, 11, 13), 
     Size = UDim2.new(0, 450, 0, 220), 
     Position = UDim2.new(0.5, 0, 0.5, 0),
-    AnchorPoint = Vector2.new(0.5, 0.5),
+    AnchorPoint = Vector2.new(0.5, 0.5), -- Центрирование
     Name = "WelcomerFrame"
 })
 CreateInstance("UICorner", WelcomerFrame, {CornerRadius = UDim.new(0, 6)})
@@ -159,20 +159,26 @@ CreateInstance("UIListLayout", TabScroll, {Padding = UDim.new(0, 4), SortOrder =
 local ContentHolder = CreateInstance("Frame", MainWindow, {ClipsDescendants = true, Size = UDim2.new(1, -140, 1, -46), Position = UDim2.new(0, 140, 0, 46), Name = "ContentHolder", BackgroundTransparency = 1})
 
 -- ==========================================
--- CLASSIC DRAGGING LOGIC (ИСПРАВЛЕНО)
+-- ОФИЦИАЛЬНЫЙ DRAGGING (БЕЗ ПРЫЖКОВ)
 -- ==========================================
-local dragging = false
-local dragStart, startPos = nil, nil
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    MainWindow.Position = UDim2.new(
+        startPos.X.Scale, startPos.X.Offset + delta.X,
+        startPos.Y.Scale, startPos.Y.Offset + delta.Y
+    )
+end
 
 Topbar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
         dragStart = input.Position
-        
-        -- Конвертируем Scale+Offset в чистый Offset, чтобы окно не прыгало
-        local absPos = MainWindow.AbsolutePosition
-        startPos = UDim2.new(0, absPos.X, 0, absPos.Y)
-        MainWindow.Position = startPos
+        startPos = MainWindow.Position
         
         input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
@@ -182,10 +188,15 @@ Topbar.InputBegan:Connect(function(input)
     end
 end)
 
+Topbar.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
 UserInputService.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - dragStart
-        MainWindow.Position = UDim2.new(0, startPos.X.Offset + delta.X, 0, startPos.Y.Offset + delta.Y)
+    if input == dragInput and dragging then
+        update(input)
     end
 end)
 
