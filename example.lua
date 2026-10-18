@@ -1,14 +1,15 @@
 -- Central UI Library - Example Script
-local CentralUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/WareSploit/Central-UI/main/main.lua?v=5"))()
+-- Make sure to use v=7 to bypass cache
+local CentralUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/WareSploit/Central-UI/main/main.lua?v=7"))()
 
--- Смена названия окна
+-- Change window title
 CentralUI:SetTitle("WareSploit Hub")
 
--- Создание вкладок
+-- Create tabs
 local MainTab = CentralUI:CreateTab("Main", "rbxassetid://10723407389")
 local SettingsTab = CentralUI:CreateTab("Settings", "rbxassetid://10734950309")
 
--- Водяной знак (теперь сам покажет экзекьютор и версию)
+-- Show Watermark (Executor + Version)
 CentralUI:CreateWatermark()
 
 -- ==========================================
@@ -25,29 +26,26 @@ CentralUI:CreateDropdown(MainTab, "Select Mode", {"Alpha", "Beta", "Gamma", "Del
 end, "game_mode")
 
 -- ==========================================
--- SETTINGS TAB (Демонстрация динамических вкладок)
+-- SETTINGS TAB
 -- ==========================================
 CentralUI:CreateSection(SettingsTab, "Tab Management")
 
 CentralUI:CreateButton(SettingsTab, "Change Main Icon", function()
-    -- Меняем иконку вкладки Main на лету
     MainTab:SetIcon("rbxassetid://10734934347")
     CentralUI:Notify("Tab", "Main icon changed!", 2)
 end)
 
 CentralUI:CreateButton(SettingsTab, "Rename Main Tab", function()
-    -- Переименовываем вкладку
     MainTab:SetName("Renamed Main")
     CentralUI:Notify("Tab", "Main tab renamed!", 2)
 end)
 
 CentralUI:CreateButton(SettingsTab, "Remove This Tab", function()
-    -- Удаляем текущую вкладку (Settings)
     CentralUI:RemoveTab(SettingsTab)
     CentralUI:Notify("Tab", "Settings tab removed!", 2)
 end)
 
--- Создаем третью вкладку через 3 секунды для теста
+-- Dynamically create a new tab after 3 seconds
 task.delay(3, function()
     local NewTab = CentralUI:CreateTab("Dynamic", "rbxassetid://10723415903")
     CentralUI:CreateSection(NewTab, "New Tab")
