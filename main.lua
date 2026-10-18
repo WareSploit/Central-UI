@@ -1,6 +1,6 @@
 --!nolint UndefinedVariable
 --[=[
-    Central UI Library v4.2
+    Central UI Library v5.0 (Stable Core)
     Monochrome Dark Theme
     Author: WareSploit
     Repository: https://github.com/WareSploit/Central-UI
@@ -15,6 +15,7 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
 local CONFIG = {
     Colors = {
@@ -34,7 +35,7 @@ local CONFIG = {
         Bold = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
     },
     LogoID = "rbxassetid://10442402750",
-    Version = "v4.2.0",
+    Version = "v5.0.0",
     ConfigFolder = "CentralUI_Configs"
 }
 
@@ -73,14 +74,14 @@ end
 -- Setup Config Folder
 if makefolder then pcall(makefolder, CONFIG.ConfigFolder) end
 
--- ScreenGui
+-- ScreenGui (FIXED: ResetOnSpawn false, High DisplayOrder)
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CentralUI"
 ScreenGui.IgnoreGuiInset = true
-ScreenGui.DisplayOrder = 100
+ScreenGui.DisplayOrder = 999999 -- Always on top
 ScreenGui.ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-ScreenGui.ResetOnSpawn = false
+ScreenGui.ResetOnSpawn = false -- FIXED: Persists after death
 ScreenGui.Parent = PlayerGui
 
 -- ==========================================
@@ -169,7 +170,7 @@ CreateInstance("ImageLabel", Topbar, {
     Size = UDim2.new(0, 62, 0, 55), BackgroundTransparency = 1, Name = "MAIN-SVG", Position = UDim2.new(0, 0, -0.1087, 0)
 })
 
--- Buttons (ZIndex fixed)
+-- Buttons
 local MinBtn = CreateInstance("TextButton", Topbar, {
     BorderSizePixel = 0, TextSize = 14, AutoButtonColor = false, TextColor3 = CONFIG.Colors.Subtext,
     BackgroundColor3 = CONFIG.Colors.Element, FontFace = CONFIG.Fonts.Bold,
@@ -204,10 +205,7 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- ==========================================
--- TAB & CONTENT HOLDERS (CREATED BEFORE MINIMIZE LOGIC)
--- ==========================================
-
+-- Tab & Content Holders
 local TabHolder = CreateInstance("Frame", MainWindow, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Background, Size = UDim2.new(0, 140, 1, -46), Position = UDim2.new(0, 0, 0, 46), Name = "TabHolder"})
 local TabScroll = CreateInstance("ScrollingFrame", TabHolder, {BorderSizePixel = 0, Name = "TabScroll", AutomaticCanvasSize = Enum.AutomaticSize.Y, Size = UDim2.new(1, 0, 1, 0), ScrollBarImageColor3 = CONFIG.Colors.Subtext, ScrollBarThickness = 2, BackgroundTransparency = 1})
 CreateInstance("UIPadding", TabScroll, {PaddingTop = UDim.new(0, 8), PaddingRight = UDim.new(0, 8), PaddingLeft = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8)})
@@ -215,36 +213,18 @@ CreateInstance("UIListLayout", TabScroll, {Padding = UDim.new(0, 4), SortOrder =
 
 local ContentHolder = CreateInstance("Frame", MainWindow, {ClipsDescendants = true, Size = UDim2.new(1, -140, 1, -46), Position = UDim2.new(0, 140, 0, 46), Name = "ContentHolder", BackgroundTransparency = 1})
 
--- ==========================================
--- MINIMIZE LOGIC (FIXED)
--- ==========================================
-
+-- Minimize Logic
 local isMinimized = false
 MinBtn.MouseButton1Click:Connect(function()
-    -- Stop dragging immediately to prevent conflicts
     dragging = false 
-    
     isMinimized = not isMinimized
-    
     if isMinimized then
-        -- Hide content instantly so it doesn't clip during animation
-        TabHolder.Visible = false
-        ContentHolder.Visible = false
-        
-        -- Animate Window Height to Topbar size only
+        TabHolder.Visible = false; ContentHolder.Visible = false
         TweenProperty(MainWindow, "Size", UDim2.new(0, 540, 0, 46), 0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out):Play()
-        
-        -- Change button text
         MinBtn.Text = "+"
     else
-        -- Show content again
-        TabHolder.Visible = true
-        ContentHolder.Visible = true
-        
-        -- Animate Window Height back to normal
+        TabHolder.Visible = true; ContentHolder.Visible = true
         TweenProperty(MainWindow, "Size", UDim2.new(0, 540, 0, 380), 0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out):Play()
-        
-        -- Change button text
         MinBtn.Text = "—"
     end
 end)
@@ -346,7 +326,7 @@ function CentralUI:RemoveTab(tabData)
 end
 
 -- ==========================================
--- UI ELEMENTS
+-- UI ELEMENTS (FIXED CALLBACKS)
 -- ==========================================
 function CentralUI:CreateSection(tab, title)
     local section = CreateInstance("Frame", tab.Content, {Size = UDim2.new(1, 0, 0, 24), BackgroundTransparency = 1})
@@ -435,7 +415,6 @@ function CentralUI:CreateSlider(tab, text, min, max, default, callback, flag)
     return obj
 end
 
--- DROPDOWN
 function CentralUI:CreateDropdown(tab, text, options, default, callback, flag)
     local selected = default or options[1]
     if flag then CentralUI.Flags[flag] = selected end
@@ -637,15 +616,12 @@ function CentralUI:CreateConfigManager(tab)
     CentralUI:CreateSection(tab, "Config Manager")
     
     local inputName = CentralUI:CreateInput(tab, "Config Name", "Enter config name...", "", nil, nil)
-    
-    -- Initial load
     local currentConfigs = CentralUI:GetConfigList()
     local listDropdown = CentralUI:CreateDropdown(tab, "Select Config", currentConfigs, currentConfigs[1] or "None", nil, nil)
     
-    -- Refresh Button to update dropdown
     CentralUI:CreateButton(tab, "Refresh List", function()
         local newConfigs = CentralUI:GetConfigList()
-        CentralUI:Notify("System", "List refreshed. Save a new config to see it.", 3)
+        CentralUI:Notify("System", "List refreshed.", 3)
     end)
     
     CentralUI:CreateButton(tab, "Save Config", function()
