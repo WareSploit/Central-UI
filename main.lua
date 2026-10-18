@@ -156,22 +156,14 @@ local ContentHolder = CreateInstance("Frame", MainWindow, {ClipsDescendants = tr
 -- SMOOTH DRAGGING LOGIC (FIXED)
 -- ==========================================
 local dragging = false
-local dragStart, startPos, targetX, targetY = nil, nil, 0, 0
+local dragStart, startPos, targetPos = nil, nil, nil
 
 Topbar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
         dragStart = input.Position
-        
-        -- Фиксируем текущую позицию в Offset (пикселях), чтобы окно не прыгало
-        local absPos = MainWindow.AbsolutePosition
-        startPos = UDim2.new(0, absPos.X, 0, absPos.Y)
-        
-        -- Мгновенно применяем Offset, чтобы избежать конфликта Scale
-        MainWindow.Position = startPos
-        
-        targetX = absPos.X
-        targetY = absPos.Y
+        startPos = MainWindow.Position
+        targetPos = startPos
     end
 end)
 
@@ -179,8 +171,10 @@ Topbar.InputChanged:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
         if dragging then
             local delta = input.Position - dragStart
-            targetX = startPos.X.Offset + delta.X
-            targetY = startPos.Y.Offset + delta.Y
+            targetPos = UDim2.new(
+                startPos.X.Scale, startPos.X.Offset + delta.X,
+                startPos.Y.Scale, startPos.Y.Offset + delta.Y
+            )
         end
     end
 end)
@@ -191,14 +185,20 @@ UserInputService.InputEnded:Connect(function(input)
     end
 end)
 
--- Плавный Lerp
+-- Плавный Lerp, который двигает окно за мышкой без скачков
 RunService.RenderStepped:Connect(function(dt)
-    if dragging then
+    if dragging and targetPos then
         local cx = MainWindow.Position.X.Offset
         local cy = MainWindow.Position.Y.Offset
-        local nx = cx + (targetX - cx) * math.min(dt * 25, 1)
-        local ny = cy + (targetY - cy) * math.min(dt * 25, 1)
-        MainWindow.Position = UDim2.new(0, nx, 0, ny)
+        local sx = MainWindow.Position.X.Scale
+        local sy = MainWindow.Position.Y.Scale
+        
+        local nx = cx + (targetPos.X.Offset - cx) * math.min(dt * 30, 1)
+        local ny = cy + (targetPos.Y.Offset - cy) * math.min(dt * 30, 1)
+        local nsx = sx + (targetPos.X.Scale - sx) * math.min(dt * 30, 1)
+        local nsy = sy + (targetPos.Y.Scale - sy) * math.min(dt * 30, 1)
+        
+        MainWindow.Position = UDim2.new(nsx, nx, nsy, ny)
     end
 end)
 
