@@ -153,17 +153,25 @@ CreateInstance("UIListLayout", TabScroll, {Padding = UDim.new(0, 4), SortOrder =
 local ContentHolder = CreateInstance("Frame", MainWindow, {ClipsDescendants = true, Size = UDim2.new(1, -140, 1, -46), Position = UDim2.new(0, 140, 0, 46), Name = "ContentHolder", BackgroundTransparency = 1})
 
 -- ==========================================
--- SMOOTH DRAGGING LOGIC
+-- SMOOTH DRAGGING LOGIC (FIXED)
 -- ==========================================
 local dragging = false
-local dragStart, startPos, targetPos = nil, nil, nil
+local dragStart, startPos, targetX, targetY = nil, nil, 0, 0
 
 Topbar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
         dragStart = input.Position
-        startPos = MainWindow.Position
-        targetPos = MainWindow.Position
+        
+        -- Фиксируем текущую позицию в Offset (пикселях), чтобы окно не прыгало
+        local absPos = MainWindow.AbsolutePosition
+        startPos = UDim2.new(0, absPos.X, 0, absPos.Y)
+        
+        -- Мгновенно применяем Offset, чтобы избежать конфликта Scale
+        MainWindow.Position = startPos
+        
+        targetX = absPos.X
+        targetY = absPos.Y
     end
 end)
 
@@ -171,7 +179,8 @@ Topbar.InputChanged:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
         if dragging then
             local delta = input.Position - dragStart
-            targetPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            targetX = startPos.X.Offset + delta.X
+            targetY = startPos.Y.Offset + delta.Y
         end
     end
 end)
@@ -182,14 +191,14 @@ UserInputService.InputEnded:Connect(function(input)
     end
 end)
 
--- Smooth Lerp update loop
+-- Плавный Lerp
 RunService.RenderStepped:Connect(function(dt)
-    if dragging and targetPos then
-        local currentX = MainWindow.Position.X.Offset
-        local currentY = MainWindow.Position.Y.Offset
-        local newX = currentX + (targetPos.X.Offset - currentX) * math.min(dt * 25, 1)
-        local newY = currentY + (targetPos.Y.Offset - currentY) * math.min(dt * 25, 1)
-        MainWindow.Position = UDim2.new(0, newX, 0, newY)
+    if dragging then
+        local cx = MainWindow.Position.X.Offset
+        local cy = MainWindow.Position.Y.Offset
+        local nx = cx + (targetX - cx) * math.min(dt * 25, 1)
+        local ny = cy + (targetY - cy) * math.min(dt * 25, 1)
+        MainWindow.Position = UDim2.new(0, nx, 0, ny)
     end
 end)
 
