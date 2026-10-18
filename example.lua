@@ -1,54 +1,45 @@
--- Central UI Library - Example Script
--- Make sure to use v=7 to bypass cache
-local CentralUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/WareSploit/Central-UI/main/main.lua?v=7"))()
+local CentralUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/WareSploit/Central-UI/main/main.lua?v=16"))()
 
--- Change window title
 CentralUI:SetTitle("WareSploit Hub")
+CentralUI:CreateWatermark()
 
--- Create tabs
 local MainTab = CentralUI:CreateTab("Main", "rbxassetid://10723407389")
 local SettingsTab = CentralUI:CreateTab("Settings", "rbxassetid://10734950309")
 
--- Show Watermark (Executor + Version)
-CentralUI:CreateWatermark()
-
--- ==========================================
--- MAIN TAB
--- ==========================================
 CentralUI:CreateSection(MainTab, "General")
 
-CentralUI:CreateButton(MainTab, "Click Me", function()
-    CentralUI:Notify("Button Clicked", "You clicked the button!", 3)
-end)
+local toggle1 = CentralUI:CreateToggle(MainTab, "Enable Feature", true, function(state)
+    print("Feature enabled:", state)
+end, "feature_toggle")
 
-CentralUI:CreateDropdown(MainTab, "Select Mode", {"Alpha", "Beta", "Gamma", "Delta"}, "Alpha", function(selected)
+local speedSlider = CentralUI:CreateSlider(MainTab, "WalkSpeed", 16, 100, 16, function(val)
+    print("Speed set to:", val)
+end, "speed_slider")
+
+local modeDropdown = CentralUI:CreateDropdown(MainTab, "Select Mode", {"Alpha", "Beta", "Gamma", "Delta"}, "Alpha", function(selected)
     print("Mode selected:", selected)
 end, "game_mode")
 
--- ==========================================
--- SETTINGS TAB
--- ==========================================
-CentralUI:CreateSection(SettingsTab, "Tab Management")
-
-CentralUI:CreateButton(SettingsTab, "Change Main Icon", function()
-    MainTab:SetIcon("rbxassetid://10734934347")
-    CentralUI:Notify("Tab", "Main icon changed!", 2)
+CentralUI:CreateButton(MainTab, "Click Me", function()
+    CentralUI:Notify("Action", "You clicked the button!", 3)
 end)
 
-CentralUI:CreateButton(SettingsTab, "Rename Main Tab", function()
-    MainTab:SetName("Renamed Main")
-    CentralUI:Notify("Tab", "Main tab renamed!", 2)
+CentralUI:CreateSection(SettingsTab, "Config")
+CentralUI:CreateButton(SettingsTab, "Save Config", function()
+    CentralUI:Notify("Config Saved", "Your configuration has been saved!", 3)
 end)
 
-CentralUI:CreateButton(SettingsTab, "Remove This Tab", function()
-    CentralUI:RemoveTab(SettingsTab)
-    CentralUI:Notify("Tab", "Settings tab removed!", 2)
-end)
-
--- Dynamically create a new tab after 3 seconds
-task.delay(3, function()
-    local NewTab = CentralUI:CreateTab("Dynamic", "rbxassetid://10723415903")
-    CentralUI:CreateSection(NewTab, "New Tab")
-    CentralUI:CreateLabel(NewTab, "This tab was added dynamically!")
-    CentralUI:Notify("Info", "A new tab was added dynamically!", 3)
+-- Dynamic management demonstration
+task.delay(5, function()
+    speedSlider.SetValue(75)
+    toggle1.SetValue(false)
+    modeDropdown.SetValue("Gamma")
+    CentralUI:Notify("Scripting", "Elements updated dynamically!", 4)
+    
+    local ExtraTab = CentralUI:CreateTab("Extra", "rbxassetid://10723415903")
+    CentralUI:CreateSection(ExtraTab, "Dynamic Content")
+    
+    task.wait(5)
+    CentralUI:RemoveTab(ExtraTab)
+    CentralUI:Notify("Scripting", "Tab 'Extra' was removed!", 3)
 end)
