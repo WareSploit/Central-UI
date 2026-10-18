@@ -75,34 +75,32 @@ ScreenGui.Parent = PlayerGui
 
 -- Welcomer (Loading Screen)
 local WelcomerFrame = CreateInstance("Frame", ScreenGui, {
-    BorderSizePixel = 0, BackgroundColor3 = Color3.fromRGB(11, 11, 13), Size = UDim2.new(0.46719, 0, 0.39769, 0), Position = UDim2.new(0.27489, 0, 0.31732, 0), Name = "WelcomerFrame"
+    BorderSizePixel = 0, BackgroundColor3 = Color3.fromRGB(11, 11, 13), Size = UDim2.new(0, 400, 0, 200), Position = UDim2.new(0.5, -200, 0.5, -100), Name = "WelcomerFrame", AnchorPoint = Vector2.new(0.5, 0.5)
 })
 CreateInstance("UICorner", WelcomerFrame, {CornerRadius = UDim.new(0, 6)})
 CreateInstance("UIStroke", WelcomerFrame, {Transparency = 0.5, Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
 
-local WelcomerContent = CreateInstance("Frame", WelcomerFrame, {Size = UDim2.new(0, 420, 0, 200), Position = UDim2.new(0.5, -210, 0.5, -100), Name = "Content", BackgroundTransparency = 1})
-CreateInstance("ImageLabel", WelcomerContent, {Image = CONFIG.LogoID, Size = UDim2.new(0, 107, 0, 74), BackgroundTransparency = 1, Name = "MAIN-SVG", Position = UDim2.new(0.37046, 0, -0.06682, 0)})
-CreateInstance("TextLabel", WelcomerContent, {TextSize = 34, FontFace = CONFIG.Fonts.Bold, TextColor3 = CONFIG.Colors.Text, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 46), Text = "Central UI", Name = "Title", Position = UDim2.new(0, 0, 0, 36)})
-CreateInstance("TextLabel", WelcomerContent, {TextSize = 13, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Subtext, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 18), Text = "Loading, please wait...", Name = "Subtitle", Position = UDim2.new(0, 0, 0, 82)})
+local WelcomerContent = CreateInstance("Frame", WelcomerFrame, {Size = UDim2.new(1, 0, 1, 0), Name = "Content", BackgroundTransparency = 1})
+CreateInstance("ImageLabel", WelcomerContent, {Image = CONFIG.LogoID, Size = UDim2.new(0, 80, 0, 55), BackgroundTransparency = 1, Name = "MAIN-SVG", Position = UDim2.new(0.5, -40, 0, 10)})
+CreateInstance("TextLabel", WelcomerContent, {TextSize = 28, FontFace = CONFIG.Fonts.Bold, TextColor3 = CONFIG.Colors.Text, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 40), Text = "Central UI", Name = "Title", Position = UDim2.new(0, 0, 0, 65)})
+CreateInstance("TextLabel", WelcomerContent, {TextSize = 13, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Subtext, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 18), Text = "Loading, please wait...", Name = "Subtitle", Position = UDim2.new(0, 0, 0, 100)})
 
-local ProgressBar = CreateInstance("Frame", WelcomerContent, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Element, Size = UDim2.new(0.7, 0, 0, 3), Position = UDim2.new(0.15, 0, 0, 130), Name = "ProgressBar"})
+local ProgressBar = CreateInstance("Frame", WelcomerContent, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Element, Size = UDim2.new(0.7, 0, 0, 3), Position = UDim2.new(0.15, 0, 0, 140), Name = "ProgressBar"})
 CreateInstance("UICorner", ProgressBar, {CornerRadius = UDim.new(0, 2)})
 local ProgressFill = CreateInstance("Frame", ProgressBar, {BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Accent, Size = UDim2.new(0, 0, 1, 0), Name = "Fill"})
 CreateInstance("UICorner", ProgressFill, {CornerRadius = UDim.new(0, 2)})
 
-local PercentText = CreateInstance("TextLabel", WelcomerContent, {TextSize = 11, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Subtext, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 16), Text = "0%", Name = "Percent", Position = UDim2.new(0, 0, 0, 145)})
+local PercentText = CreateInstance("TextLabel", WelcomerContent, {TextSize = 11, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Subtext, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 16), Text = "0%", Name = "Percent", Position = UDim2.new(0, 0, 0, 150)})
 CreateInstance("TextLabel", WelcomerFrame, {TextSize = 11, TextXAlignment = Enum.TextXAlignment.Right, FontFace = CONFIG.Fonts.Regular, TextColor3 = CONFIG.Colors.Subtext, BackgroundTransparency = 1, Size = UDim2.new(0, 80, 0, 18), Text = CONFIG.Version, Name = "Version", Position = UDim2.new(1, -90, 1, -28)})
 
 -- Main Window
 local MainWindow = CreateInstance("Frame", ScreenGui, {
-    Visible = false, BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Background, ClipsDescendants = true, Size = UDim2.new(0, 540, 0, 380), Position = UDim2.new(0.5, -270, 0.5, -190), Name = "MainWindow"
+    Visible = false, BorderSizePixel = 0, BackgroundColor3 = CONFIG.Colors.Background, ClipsDescendants = true, 
+    Size = UDim2.new(0, 540, 0, 380), Position = UDim2.new(0.5, 0, 0.5, 0), Name = "MainWindow",
+    AnchorPoint = Vector2.new(0.5, 0.5)
 })
 CreateInstance("UICorner", MainWindow, {CornerRadius = UDim.new(0, 6)})
 CreateInstance("UIStroke", MainWindow, {Transparency = 0.5, Color = CONFIG.Colors.Stroke, ApplyStrokeMode = Enum.ApplyStrokeMode.Border})
-
-local WindowScale = Instance.new("UIScale")
-WindowScale.Scale = 0.9
-WindowScale.Parent = MainWindow
 
 -- Loading Animation
 task.spawn(function()
@@ -120,8 +118,10 @@ task.spawn(function()
     end
     task.wait(0.5)
     WelcomerFrame.Visible = false
+    
     MainWindow.Visible = true
-    TweenProperty(WindowScale, "Scale", 1, 0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out):Play()
+    MainWindow.Size = UDim2.new(0, 0, 0, 0)
+    TweenProperty(MainWindow, "Size", UDim2.new(0, 540, 0, 380), 0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out):Play()
 end)
 
 -- Topbar
@@ -167,15 +167,13 @@ Topbar.InputBegan:Connect(function(input)
     end
 end)
 
-Topbar.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-        if dragging then
-            local delta = input.Position - dragStart
-            targetPos = UDim2.new(
-                startPos.X.Scale, startPos.X.Offset + delta.X,
-                startPos.Y.Scale, startPos.Y.Offset + delta.Y
-            )
-        end
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        targetPos = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
     end
 end)
 
@@ -185,20 +183,9 @@ UserInputService.InputEnded:Connect(function(input)
     end
 end)
 
--- Плавный Lerp, который двигает окно за мышкой без скачков
 RunService.RenderStepped:Connect(function(dt)
     if dragging and targetPos then
-        local cx = MainWindow.Position.X.Offset
-        local cy = MainWindow.Position.Y.Offset
-        local sx = MainWindow.Position.X.Scale
-        local sy = MainWindow.Position.Y.Scale
-        
-        local nx = cx + (targetPos.X.Offset - cx) * math.min(dt * 30, 1)
-        local ny = cy + (targetPos.Y.Offset - cy) * math.min(dt * 30, 1)
-        local nsx = sx + (targetPos.X.Scale - sx) * math.min(dt * 30, 1)
-        local nsy = sy + (targetPos.Y.Scale - sy) * math.min(dt * 30, 1)
-        
-        MainWindow.Position = UDim2.new(nsx, nx, nsy, ny)
+        MainWindow.Position = MainWindow.Position:Lerp(targetPos, math.min(dt * 25, 1))
     end
 end)
 
@@ -251,7 +238,7 @@ CloseBtn.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = true end)
 NoBtn.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = false end)
 YesBtn.MouseButton1Click:Connect(function()
     ConfirmOverlay.Visible = false
-    local tween = game:GetService("TweenService"):Create(WindowScale, TweenInfo.new(0.3), {Scale = 0})
+    local tween = TweenProperty(MainWindow, "Size", UDim2.new(0, 0, 0, 0), 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In)
     tween:Play()
     tween.Completed:Wait()
     ScreenGui:Destroy()
@@ -264,7 +251,10 @@ UserInputService.InputBegan:Connect(function(input, gp)
     if input.KeyCode == Enum.KeyCode.RightControl or input.KeyCode == Enum.KeyCode.LeftControl then
         isOpen = not isOpen
         MainWindow.Visible = isOpen
-        if isOpen then TweenProperty(WindowScale, "Scale", 1, 0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out):Play() end
+        if isOpen then 
+            MainWindow.Size = UDim2.new(0, 0, 0, 0)
+            TweenProperty(MainWindow, "Size", UDim2.new(0, 540, 0, 380), 0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out):Play() 
+        end
     end
 end)
 
